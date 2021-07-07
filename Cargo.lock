@@ -1986,6 +1986,7 @@ name = "no-name-card-game"
 version = "0.1.0"
 dependencies = [
  "amethyst",
+ "log",
 ]
 
 [[package]]
