@@ -7,7 +7,7 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     steps:
-      - name: install linux deps
+      - name: Install linux deps
         run: |
           sudo apt update
           sudo apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev pulseaudio
@@ -31,7 +31,7 @@ jobs:
     name: Test Suite
     runs-on: ubuntu-latest
     steps:
-      - name: install linux deps
+      - name: Install linux deps
         run: |
           sudo apt update
           sudo apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev pulseaudio
@@ -55,7 +55,7 @@ jobs:
     name: Lints
     runs-on: ubuntu-latest
     steps:
-      - name: install linux deps
+      - name: Install linux deps
         run: |
           sudo apt update
           sudo apt install gcc pkg-config openssl libasound2-dev cmake build-essential python3 libfreetype6-dev libexpat1-dev libxcb-composite0-dev libssl-dev libx11-dev pulseaudio
