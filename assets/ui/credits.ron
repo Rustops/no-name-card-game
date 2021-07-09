@@ -20,7 +20,7 @@ Container(
             ),
             text: (
                 text: "Credits:\n\nWritten in 2019 using Amethyst.\n\nMain Author: hacpy rjman",
-                font: File("font/square.ttf", ("TTF", ())),
+                font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
                 font_size: 40,
                 color: (1.0, 0.65, 0., 1.0),
                 line_mode: Wrap,
