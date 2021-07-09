@@ -1,0 +1,90 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "background",
+        anchor: Middle,
+        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+        width: 20.,
+        height: 20.,
+    ),
+    background: SolidColor(0.6, 0.6, 1.0, 0.8),
+    children: [
+        // Editable text single line.
+        Container(
+            transform: (
+                id: "editable_container",
+                x: -120.0,
+                y: 20.0,
+                width: 200.,
+                height: 15.,
+                tab_order: 1,
+                anchor: BottomRight,
+            ),
+            background: SolidColor(0.09, 0.02, 0.25, 1.0),
+            children: [
+                Label(
+                    transform: (
+                        id: "editable",
+                        x: 100,
+                        width: 200.,
+                        height: 15.,
+                        tab_order: 1,
+                        anchor: MiddleLeft,
+                        stretch: XY(x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+                        mouse_reactive: true,
+                        selectable: 0,
+                    ),
+                    text: (
+                        text: "Editable",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 15.,
+                        color: (0.2, 0.2, 1.0, 1.0),
+                        align: MiddleLeft,
+                        editable: (
+                            max_length: 2000,
+                            selected_text_color: (0.09, 0.02, 0.25, 1.0),
+                            selected_background_color: (1.0, 0.5, 0.8, 1.0),
+                        ),
+                    )
+                ),
+            ]
+        ),
+        Label(
+            transform: (
+                id: "multiline",
+                x: -120.,
+                y: 220.,
+                width: 200.,
+                height: 200.,
+                tab_order: 1,
+                anchor: BottomRight,
+            ),
+            text: (
+                text: "Multiline\nText!\n Test",
+                font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                font_size: 15.,
+                color: (0.2, 0.2, 1.0, 1.0),
+                line_mode: Wrap,
+                align: MiddleLeft,
+            )
+        ),
+        Label(
+            transform: (
+                id: "fps",
+                x: 100.,
+                y: -16,
+                width: 200.,
+                height: 25.,
+                tab_order: 2,
+                anchor: TopLeft,
+                opaque: false,
+            ),
+            text: (
+                text: "N/A",
+                font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                font_size: 25.,
+                color: (0.498, 0.254, 0.937, 1.0),
+            )
+        ),
+    ],
+)
