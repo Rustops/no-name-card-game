@@ -1982,15 +1982,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "no-name-card-game"
-version = "0.1.0"
-dependencies = [
- "amethyst",
- "log",
- "shared",
-]
-
-[[package]]
 name = "nodrop"
 version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3259,7 +3250,6 @@ version = "0.1.0"
 dependencies = [
  "amethyst",
  "log",
- "shared",
 ]
 
 [[package]]
@@ -3292,10 +3282,6 @@ dependencies = [
  "cmake",
  "pkg-config",
 ]
-
-[[package]]
-name = "shared"
-version = "0.1.0"
 
 [[package]]
 name = "shared_library"
