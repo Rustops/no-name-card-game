@@ -60,7 +60,7 @@ Container(
                 anchor: BottomRight,
             ),
             text: (
-                text: "Multiline\nText!\n Test",
+                text: "Multiline\nText!\n Test\n",
                 font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
                 font_size: 15.,
                 color: (0.2, 0.2, 1.0, 1.0),

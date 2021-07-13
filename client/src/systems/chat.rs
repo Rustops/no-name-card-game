@@ -1,10 +1,9 @@
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc, Time},
-    ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    network::{
-        simulation::{NetworkSimulationEvent, NetworkSimulationTime, TransportResource},
-    },
+    ecs::{DispatcherBuilder, Entity, Read, System, SystemData, World, Write, WriteStorage},
+    network::simulation::{NetworkSimulationEvent, NetworkSimulationTime, TransportResource},
     shrev::{EventChannel, ReaderId},
+    ui::{UiEvent, UiEventType, UiFinder, UiText},
     Result,
 };
 use log::{error, info};
@@ -33,48 +32,99 @@ impl<'a, 'b> SystemDesc<'a, 'b, ChatroomSystem> for ChatroomSystemDesc {
         // Fetch the change we just created and call `register_reader` to get a
         // ReaderId<NetworkEvent>. This reader id is used to fetch new events from the network event
         // channel.
-        let reader = world
+        let network_reader = world
             .fetch_mut::<EventChannel<NetworkSimulationEvent>>()
             .register_reader();
 
-        ChatroomSystem::new(reader)
+        let ui_reader = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
+
+        ChatroomSystem::new(network_reader, ui_reader)
     }
 }
 
 /// A simple system that receives a ton of network events.
 struct ChatroomSystem {
-    reader: ReaderId<NetworkSimulationEvent>,
+    network_reader: ReaderId<NetworkSimulationEvent>,
+    ui_reader: ReaderId<UiEvent>,
+    chat_input: Option<Entity>,
+    chat_output: Option<Entity>,
 }
 
 impl ChatroomSystem {
-    pub fn new(reader: ReaderId<NetworkSimulationEvent>) -> Self {
-        Self { reader }
+    pub fn new(
+        network_reader: ReaderId<NetworkSimulationEvent>,
+        ui_reader: ReaderId<UiEvent>,
+    ) -> Self {
+        Self {
+            network_reader,
+            ui_reader,
+            chat_input: None,
+            chat_output: None,
+        }
+    }
+
+    fn find_ui_elements(&mut self, finder: &UiFinder) {
+        if self.chat_input.is_none() {
+            self.chat_input = finder.find("editable");
+        }
+        if self.chat_output.is_none() {
+            self.chat_output = finder.find("multiline");
+        }
     }
 }
 
 impl<'a> System<'a> for ChatroomSystem {
     type SystemData = (
+        UiFinder<'a>,
+        Read<'a, EventChannel<UiEvent>>,
         Read<'a, NetworkSimulationTime>,
         Read<'a, Time>,
         Write<'a, TransportResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
+        WriteStorage<'a, UiText>,
     );
-    fn run(&mut self, (sim_time, time, mut net, event /*, tx*/): Self::SystemData) {
-        let server_addr = "127.0.0.1:3457".parse().unwrap();
-        for frame in sim_time.sim_frames_to_run() {
-            info!("Sending message for sim frame {}.", frame);
-            let payload = format!(
-                "CL: sim_frame:{},abs_time:{}",
-                frame,
-                time.absolute_time_seconds()
-            );
-            net.send(server_addr, payload.as_bytes());
-        }
 
-        for event in event.read(&mut self.reader) {
+    fn run(
+        &mut self,
+        (ui_finder, ui_event, _sim_time, time, mut net, event, mut ui_text): Self::SystemData,
+    ) {
+        self.find_ui_elements(&ui_finder);
+
+        let server_addr = "127.0.0.1:3457".parse().unwrap();
+
+        ui_event
+            .read(&mut self.ui_reader)
+            .filter(|event| event.event_type == UiEventType::ValueCommit)
+            .for_each(|event| {
+                if self.chat_input == Some(event.target) {
+                    if let Some(input) = ui_text.get_mut(event.target) {
+                        let msg = input.text.clone();
+                        info!(
+                            "[{}] Sending message: {}",
+                            time.absolute_time_seconds(),
+                            &msg
+                        );
+                        net.send(server_addr, msg.as_bytes());
+                        input.text = String::from("");
+                    }
+                }
+            });
+
+        for event in event.read(&mut self.network_reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
-                    info!("Resolve msg: {:?} from {}", payload, addr)
+                    info!("Recv msg: {:?} from {}", payload, addr);
+                    if let Some(chat_output) = self.chat_output {
+                        if let Some(output) = ui_text.get_mut(chat_output) {
+                            let raw_msg = payload.to_vec();
+                            let msg = String::from_utf8_lossy(&raw_msg);
+
+                            let total_msg = output.text.clone();
+                            let new_total_msg = format!("{}{} \n", total_msg, msg);
+
+                            output.text = new_total_msg;
+                        }
+                    }
                 }
                 NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
                 NetworkSimulationEvent::Disconnect(addr) => info!("Server Disconnected: {}", addr),
