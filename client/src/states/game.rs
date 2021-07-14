@@ -75,8 +75,8 @@ impl SimpleState for Game {
                 );
                 Trans::None
             }
-            StateEvent::Input(input) => {
-                log::info!("Input Event detected: {:?}.", input);
+            StateEvent::Input(_input) => {
+                // log::info!("Input Event detected: {:?}.", input);
                 Trans::None
             }
         }
