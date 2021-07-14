@@ -1,3 +1,5 @@
+use std::net::SocketAddr;
+
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
@@ -41,11 +43,15 @@ impl<'a, 'b> SystemDesc<'a, 'b, ChatReceiveSystem> for ChatReceiveSystemDesc {
 /// A simple system that receives a ton of network events.
 struct ChatReceiveSystem {
     reader: ReaderId<NetworkSimulationEvent>,
+    connection: Vec<SocketAddr>,
 }
 
 impl ChatReceiveSystem {
     pub fn new(reader: ReaderId<NetworkSimulationEvent>) -> Self {
-        Self { reader }
+        Self {
+            reader,
+            connection: Vec::new(),
+        }
     }
 }
 
@@ -65,12 +71,20 @@ impl<'a> System<'a> for ChatReceiveSystem {
                     // be exchanging messages at a constant rate. Laminar makes use of this by
                     // packaging message acks with the next sent message. Therefore, in order for
                     // reliability to work properly, we'll send a generic "ok" response.
-
-                    net.send(*addr, payload);
+                    let _v: Vec<_> = self
+                        .connection
+                        .iter()
+                        .map(|x| net.send(*x, payload))
+                        .collect();
                 }
-                NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
+                NetworkSimulationEvent::Connect(addr) => {
+                    info!("New client connection: {}", addr);
+                    self.connection.push(*addr);
+                }
                 NetworkSimulationEvent::Disconnect(addr) => {
                     info!("Client Disconnected: {}", addr);
+                    let index = self.connection.iter().position(|x| *x == *addr).unwrap();
+                    self.connection.remove(index);
                 }
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);
