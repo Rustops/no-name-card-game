@@ -2,8 +2,9 @@ use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy, network::simulation::tcp::TcpNetworkBundle,
     prelude::*, utils::application_root_dir, Result,
 };
-use std::net::TcpListener;
+use std::net::{SocketAddr, TcpListener};
 use std::time::Duration;
+use structopt::StructOpt;
 use systems::chat::ChatReceiveBundle;
 
 mod systems;
@@ -14,36 +15,44 @@ pub struct GameState;
 impl SimpleState for GameState {}
 
 fn main() -> Result<()> {
-    amethyst::start_logger(Default::default());
+    let server = Server::init();
+    server.run()
+}
 
-    //    // UDP
-    //    let socket = UdpSocket::bind("0.0.0.0:3457")?;
-    //    socket.set_nonblocking(true)?;
+#[derive(StructOpt, Debug)]
+#[structopt(name = "server", author, about, no_version)]
+pub struct Server {
+    /// The websocket port of server.
+    #[structopt(short, default_value = "5566")]
+    pub port: u16,
 
-    // TCP
-    let listener = TcpListener::bind("0.0.0.0:3457")?;
-    listener.set_nonblocking(true)?;
+    #[structopt(long, default_value = "user")]
+    pub name: String,
+}
 
-    //    // Laminar
-    //    let socket = LaminarSocket::bind("0.0.0.0:3457")?;
+impl Server {
+    pub fn init() -> Self {
+        Server::from_args()
+    }
+    pub fn run(self) -> Result<()> {
+        let listener_addrs = SocketAddr::from(([127, 0, 0, 1], self.port));
 
-    let assets_dir = application_root_dir()?.join("assets");
+        amethyst::start_logger(Default::default());
+        let listener = TcpListener::bind(listener_addrs)?;
+        listener.set_nonblocking(true)?;
 
-    let game_data = GameDataBuilder::default()
-        //        // UDP
-        //        .with_bundle(UdpNetworkBundle::new(Some(socket), 2048))?
-        // TCP
-        .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
-        //        // Laminar
-        //        .with_bundle(LaminarNetworkBundle::new(Some(socket)))?
-        .with_bundle(ChatReceiveBundle)?;
+        let assets_dir = application_root_dir()?.join("assets");
+        let game_data = GameDataBuilder::default()
+            .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
+            .with_bundle(ChatReceiveBundle)?;
 
-    let mut game = Application::build(assets_dir, GameState)?
-        .with_frame_limit(
-            FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
-            60,
-        )
-        .build(game_data)?;
-    game.run();
-    Ok(())
+        let mut game = Application::build(assets_dir, GameState)?
+            .with_frame_limit(
+                FrameRateLimitStrategy::SleepAndYield(Duration::from_millis(2)),
+                60,
+            )
+            .build(game_data)?;
+        game.run();
+        Ok(())
+    }
 }

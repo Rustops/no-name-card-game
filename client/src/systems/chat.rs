@@ -7,9 +7,20 @@ use amethyst::{
     Result,
 };
 use log::{error, info};
+use std::net::SocketAddr;
+
+const SERVER_ADDRESS: &str = "127.0.0.1:5566";
 
 #[derive(Debug)]
-pub struct ChatroomBundle;
+pub struct ChatroomBundle {
+    server_info: ServerInfoResource,
+}
+
+impl ChatroomBundle {
+    pub fn new(server_info: ServerInfoResource) -> Self {
+        Self { server_info }
+    }
+}
 
 impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
@@ -18,6 +29,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
             "spam_system",
             &[],
         );
+        world.insert(ServerInfoResource::new(self.server_info));
         Ok(())
     }
 }
@@ -75,6 +87,8 @@ impl ChatroomSystem {
 
 impl<'a> System<'a> for ChatroomSystem {
     type SystemData = (
+        // ReadStorage<'a, ServerInfoResource>,
+        Read<'a, ServerInfoResource>,
         UiFinder<'a>,
         Read<'a, EventChannel<UiEvent>>,
         Read<'a, NetworkSimulationTime>,
@@ -86,11 +100,9 @@ impl<'a> System<'a> for ChatroomSystem {
 
     fn run(
         &mut self,
-        (ui_finder, ui_event, _sim_time, time, mut net, event, mut ui_text): Self::SystemData,
+        (server_info, ui_finder, ui_event, _sim_time, time, mut net, event, mut ui_text): Self::SystemData,
     ) {
         self.find_ui_elements(&ui_finder);
-
-        let server_addr = "127.0.0.1:3457".parse().unwrap();
 
         ui_event
             .read(&mut self.ui_reader)
@@ -104,7 +116,7 @@ impl<'a> System<'a> for ChatroomSystem {
                             time.absolute_time_seconds(),
                             &msg
                         );
-                        net.send(server_addr, msg.as_bytes());
+                        net.send(server_info.get_addr(), msg.as_bytes());
                         input.text = String::from("");
                     }
                 }
@@ -136,6 +148,29 @@ impl<'a> System<'a> for ChatroomSystem {
                 }
                 _ => {}
             }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ServerInfoResource {
+    pub addr: String,
+}
+
+impl ServerInfoResource {
+    pub fn new(info: ServerInfoResource) -> Self {
+        Self { addr: info.addr }
+    }
+
+    pub fn get_addr(&self) -> SocketAddr {
+        self.addr.parse().unwrap()
+    }
+}
+
+impl Default for ServerInfoResource {
+    fn default() -> Self {
+        Self {
+            addr: SERVER_ADDRESS.parse().unwrap(),
         }
     }
 }

@@ -1,12 +1,13 @@
 [package]
+edition = "2018"
 name = "server"
 version = "0.1.0"
-edition = "2018"
 
 [dependencies]
 shared = { path = "../shared" }
-amethyst = {version = "0.15.3", features = ["no-slow-safety-checks"]}
+amethyst = { version = "0.15.3", features = ["no-slow-safety-checks"] }
 log = { version = "^0.4", features = ["serde"] }
+structopt = "0.3.22"
 
 [features]
 default = ["vulkan"]
