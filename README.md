@@ -8,11 +8,14 @@ Everything is in the beginning.Maybe this is a card game developed with [Amethys
 rustup default 1.47.0
 # build binary
 cargo build --release
-# start server
-./target/release/server
-# start client
+# start server, listening port of 6666（localhost）
+./target/release/server -p 6666 --name server
+# start client, connect to host of url
 cargo run --bin no-name-card-game
-# or cp ./target/release/no-name-card-game && ./no-name-card-game
+# or cp ./target/release/no-name-card-game ./client && ./client/no-name-card-game --url 127.0.0.1:6666 --name client1
+
+# start client2
+./client/no-name-card-game --url 127.0.0.1:6666 --name client2
 ```
 
 # References

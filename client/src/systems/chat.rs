@@ -9,7 +9,7 @@ use amethyst::{
 use log::{error, info};
 use std::net::SocketAddr;
 
-const SERVER_ADDRESS: &str = "127.0.0.1:5566";
+const SERVER_ADDRESS: &str = "127.0.0.1:6666";
 
 #[derive(Debug)]
 pub struct ChatroomBundle {

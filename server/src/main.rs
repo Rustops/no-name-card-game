@@ -23,10 +23,10 @@ fn main() -> Result<()> {
 #[structopt(name = "server", author, about, no_version)]
 pub struct Server {
     /// The websocket port of server.
-    #[structopt(short, default_value = "5566")]
+    #[structopt(short, default_value = "6666")]
     pub port: u16,
 
-    #[structopt(long, default_value = "user")]
+    #[structopt(long, default_value = "server")]
     pub name: String,
 }
 
