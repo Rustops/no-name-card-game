@@ -29,7 +29,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
             "spam_system",
             &[],
         );
-        world.insert(ServerInfoResource::new(self.server_info));
+        world.insert(ServerInfoResource::new(self.server_info.addr));
         Ok(())
     }
 }
@@ -86,6 +86,7 @@ impl ChatroomSystem {
 }
 
 impl<'a> System<'a> for ChatroomSystem {
+    #[allow(clippy::type_complexity)]
     type SystemData = (
         // ReadStorage<'a, ServerInfoResource>,
         Read<'a, ServerInfoResource>,
@@ -158,8 +159,8 @@ pub struct ServerInfoResource {
 }
 
 impl ServerInfoResource {
-    pub fn new(info: ServerInfoResource) -> Self {
-        Self { addr: info.addr }
+    pub fn new(addr: String) -> Self {
+        Self { addr }
     }
 
     pub fn get_addr(&self) -> SocketAddr {
