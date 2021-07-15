@@ -9,7 +9,7 @@ Container(
     ),
     background: SolidColor(0.6, 0.6, 1.0, 0.8),
     children: [
-        // Editable text single line.
+        // Chatbox input
         Container(
             transform: (
                 id: "editable_container",
@@ -49,25 +49,54 @@ Container(
                 ),
             ]
         ),
-        Label(
+        // Amethyst logo
+        // this is a good reference to insert other images 
+        Image(
             transform: (
-                id: "multiline",
+                id: "logo",
+                y: 32.,
+                width: 64.,
+                height: 64.,
+                tab_order: 1,
+                anchor: BottomMiddle,
+                mouse_reactive: true,
+            ),
+            image: Texture(File("texture/logo_transparent.png", ("IMAGE", ()))),
+        ),
+        // Chatbox output
+        Container(
+            transform: (
+                id: "multiline_container",
                 x: -120.,
-                y: 220.,
+                y: 140.,
                 width: 200.,
                 height: 200.,
                 tab_order: 1,
                 anchor: BottomRight,
             ),
-            text: (
-                text: "Multiline\nText!\n Test\n",
-                font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
-                font_size: 15.,
-                color: (0.2, 0.2, 1.0, 1.0),
-                line_mode: Wrap,
-                align: MiddleLeft,
-            )
+            background: SolidColor(0.6, 0.6, 1.0, 1.0),
+            children: [
+                Label(
+                    transform: (
+                        id: "multiline",
+                        x: -100.,
+                        y: 100.,
+                        width: 200.,
+                        height: 200.,
+                        anchor: BottomRight,
+                    ),
+                    text: (
+                        text: "Multiline\n",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 15.,
+                        color: (0.2, 0.2, 1.0, 1.0),
+                        line_mode: Wrap,
+                        align: TopLeft,
+                    )
+                ),
+            ]
         ),
+        // Show fps
         Label(
             transform: (
                 id: "fps",
