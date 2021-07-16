@@ -109,17 +109,15 @@ impl<'a> System<'a> for ChatroomSystem {
             .read(&mut self.ui_reader)
             .filter(|event| event.event_type == UiEventType::ValueCommit)
             .for_each(|event| {
-                if self.chat_input == Some(event.target) {
-                    if let Some(input) = ui_text.get_mut(event.target) {
-                        let msg = input.text.clone();
-                        info!(
-                            "[{}] Sending message: {}",
-                            time.absolute_time_seconds(),
-                            &msg
-                        );
-                        net.send(server_info.get_addr(), msg.as_bytes());
-                        input.text = String::from("");
-                    }
+                if let Some(input) = ui_text.get_mut(event.target) {
+                    let msg = input.text.clone();
+                    info!(
+                        "[{}] Sending message: {}",
+                        time.absolute_time_seconds(),
+                        &msg
+                    );
+                    net.send(server_info.get_addr(), msg.as_bytes());
+                    input.text = String::from("");
                 }
             });
 
