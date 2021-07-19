@@ -1,0 +1,11 @@
+Image(
+    transform: (
+        id: "flandre",
+        width: 182.,
+        height: 250.,
+        x: 110,
+        y: 140,
+        anchor: BottomLeft,
+    ),
+    image: Texture(File("character/flandre.png", ("IMAGE", ()))),
+)

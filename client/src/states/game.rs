@@ -34,6 +34,7 @@ impl SimpleState for Game {
 
         self.ui_root =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/game.ron", ())));
+        world.exec(|mut creator: UiCreator<'_>| creator.create("ui/player.ron", ()));
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {
