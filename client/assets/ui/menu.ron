@@ -14,7 +14,6 @@ Container(
                 id: "background",
                 width: 1280.,
                 height: 720.,
-                tab_order: 1,
                 anchor: Middle,
             ),
             image: Texture(File("texture/bg_gamehall.png", ("IMAGE", ()))),
@@ -22,135 +21,63 @@ Container(
         Container(
             transform: (
                 id: "container_start",
-                y: 210,
-                width: 755.,
-                height: 150.,
-                anchor: Middle,
+                x: -150,
+                width: 100.,
+                height: 50.,
+                anchor: MiddleRight,
             ),
             background: SolidColor(1.0, 0.65, 0.0, 1.0),
             children: [
                 Button(
                     transform: (
                         id: "start",
-                        width: 750.,
-                        height: 145.,
+                        width: 100.,
+                        height: 50.,
                         tab_order: 1,
                         anchor: Middle,
                         mouse_reactive: true,
                     ),
                     button: (
-                        text: "START GAME",
+                        text: "开始游戏",
                         font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
-                        font_size: 75.,
-                        normal_text_color: (1.0, 0.65, 0., 1.0), // ffa500
-                        normal_image: SolidColor(0., 0., 0., 1.),
-                        hover_image: SolidColor(0.1, 0.1, 0.1, 1.),
-                        press_image: SolidColor(0.15, 0.15, 0.15, 1.),
+                        font_size: 25.,
+                        normal_text_color: (0.7, 0.1, 0.11, 1.0),
+                        normal_image: Texture(File("texture/menu_btn_normal.png", ("IMAGE", ()))),
+                        hover_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
+                        press_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
                     )
                 ),
             ]
         ),
-
-
-        Container(
-            transform: (
-                id: "container_load",
-                y: 50,
-                width: 755.,
-                height: 150.,
-                anchor: Middle,
-            ),
-            background: SolidColor(1.0, 0.65, 0.0, 1.0),
-            children: [
-
-                // Complex Button
-                Button(
-                    transform: (
-                        id: "load",
-                        width: 750.,
-                        height: 145.,
-                        tab_order: 3,
-                        anchor: Middle,
-                        mouse_reactive: true,
-                    ),
-                    button: (
-                        text: "LOAD GAME",
-                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
-                        font_size: 75.,
-                        normal_text_color: (1.0, 0.65, 0., 1.0), // ffa500
-                        normal_image: SolidColor(0., 0., 0., 1.),
-                        hover_image: SolidColor(0.1, 0.1, 0.1, 1.),
-                        press_image: SolidColor(0.15, 0.15, 0.15, 1.),
-                    )
-                ),
-            ]
-        ),
-
-
-        Container(
-            transform: (
-                id: "container_options",
-                y: -110,
-                width: 755.,
-                height: 150.,
-                anchor: Middle,
-            ),
-            background: SolidColor(1.0, 0.65, 0.0, 1.0),
-            children: [
-
-                // Complex Button
-                Button(
-                    transform: (
-                        id: "options",
-                        width: 750.,
-                        height: 145.,
-                        tab_order: 3,
-                        anchor: Middle,
-                        mouse_reactive: true,
-                    ),
-                    button: (
-                        text: "OPTIONS",
-                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
-                        font_size: 75.,
-                        normal_text_color: (1.0, 0.65, 0., 1.0), // ffa500
-                        normal_image: SolidColor(0., 0., 0., 1.),
-                        hover_image: SolidColor(0.1, 0.1, 0.1, 1.),
-                        press_image: SolidColor(0.15, 0.15, 0.15, 1.),
-                    )
-                ),
-            ]
-        ),
-
-
         Container(
             transform: (
                 id: "container_credits",
-                y: -270,
-                width: 755.,
-                height: 150.,
-                anchor: Middle,
+                y: -100,
+                x: -150,
+                width: 100.,
+                height: 50.,
+                anchor: MiddleRight,
             ),
             background: SolidColor(1.0, 0.65, 0.0, 1.0),
             children: [
-
                 // Complex Button
                 Button(
                     transform: (
                         id: "credits",
-                        width: 750.,
-                        height: 145.,
-                        tab_order: 3,
+                        width: 100.,
+                        height: 50.,
+                        tab_order: 2,
                         anchor: Middle,
                         mouse_reactive: true,
                     ),
                     button: (
-                        text: "CREDITS",
+                        text: "相关信息",
                         font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
-                        font_size: 75.,
-                        normal_text_color: (1.0, 0.65, 0., 1.0), // ffa500
-                        normal_image: SolidColor(0., 0., 0., 1.),
-                        hover_image: SolidColor(0.1, 0.1, 0.1, 1.),
-                        press_image: SolidColor(0.15, 0.15, 0.15, 1.),
+                        font_size: 25.,
+                        normal_text_color: (0.7, 0.1, 0.11, 1.0),
+                        normal_image: Texture(File("texture/menu_btn_normal.png", ("IMAGE", ()))),
+                        hover_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
+                        press_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
                     )
                 ),
             ]

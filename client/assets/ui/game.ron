@@ -30,7 +30,7 @@ Container(
                 tab_order: 1,
                 anchor: BottomRight,
             ),
-            background: SolidColor(0.09, 0.02, 0.25, 1.0),
+            background: SolidColor(0.64, 0.6, 0.6, 1.0),
             children: [
                 Label(
                     transform: (
@@ -48,7 +48,7 @@ Container(
                         text: "Editable",
                         font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
                         font_size: 15.,
-                        color: (0.2, 0.2, 1.0, 1.0),
+                        color: (0.0, 0.0, 0.0, 1.0),
                         align: MiddleLeft,
                         editable: (
                             max_length: 2000,
@@ -95,7 +95,7 @@ Container(
                         text: "Multiline\n",
                         font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
                         font_size: 15.,
-                        color: (0.2, 0.2, 1.0, 1.0),
+                        color: (0.0, 0.0, 0.0, 1.0),
                         line_mode: Wrap,
                         align: TopLeft,
                     )
