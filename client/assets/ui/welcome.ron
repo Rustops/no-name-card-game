@@ -9,7 +9,6 @@ Container(
     ),
 
     children: [
-
         Image(
             transform: (
                 id: "background",
@@ -18,7 +17,7 @@ Container(
                 tab_order: 1,
                 anchor: Middle,
             ),
-            image: Texture(File("texture/logo.png", ("IMAGE", ()))),
+            image: Texture(File("texture/bg_login.png", ("IMAGE", ()))),
         ),
     ],
 )
