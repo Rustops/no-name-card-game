@@ -35,7 +35,7 @@ impl Server {
         Server::from_args()
     }
     pub fn run(self) -> Result<()> {
-        let listener_addrs = SocketAddr::from(([127, 0, 0, 1], self.port));
+        let listener_addrs = SocketAddr::from(([0, 0, 0, 0], self.port));
 
         amethyst::start_logger(Default::default());
         let listener = TcpListener::bind(listener_addrs)?;

@@ -30,7 +30,7 @@ impl Component for ServerInfoResource {
 #[structopt(name = "no-name-card-game", author, about, no_version)]
 pub struct Client {
     /// The websocket port of server.
-    #[structopt(long, default_value = "localhost:6666")]
+    #[structopt(long, default_value = "127.0.0.1:6666")]
     pub url: String,
 
     #[structopt(long, default_value = "client")]
