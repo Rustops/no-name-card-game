@@ -8,9 +8,17 @@ Container(
         width: 20.,
         height: 20.,
     ),
-    background: SolidColor(0.03, 0.03, 0.03, 1.0),
     children: [
-
+        Image(
+            transform: (
+                id: "background",
+                width: 1280.,
+                height: 720.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            image: Texture(File("texture/bg_gamehall.png", ("IMAGE", ()))),
+        ),
         Container(
             transform: (
                 id: "container_start",
@@ -21,7 +29,6 @@ Container(
             ),
             background: SolidColor(1.0, 0.65, 0.0, 1.0),
             children: [
-
                 Button(
                     transform: (
                         id: "start",
