@@ -1,6 +1,4 @@
-use amethyst::{
-    ecs::{Component, DenseVecStorage},
-};
+use amethyst::ecs::{Component, DenseVecStorage};
 
 #[derive(Component, PartialEq, Eq, PartialOrd, Ord)]
 #[storage(DenseVecStorage)]

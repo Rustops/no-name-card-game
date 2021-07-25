@@ -1,3 +1,4 @@
+use crate::resources::initialize_audio;
 use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down, is_mouse_button_down},
@@ -5,7 +6,6 @@ use amethyst::{
     ui::UiCreator,
     winit::{MouseButton, VirtualKeyCode},
 };
-use crate::resources::initialize_audio;
 
 #[derive(Default, Debug)]
 pub struct WelcomeScreen {

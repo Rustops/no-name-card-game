@@ -1,13 +1,6 @@
-use amethyst::{
-    ecs::prelude::World,
-    // prelude::{Builder, WorldExt},
-};
+use amethyst::ecs::prelude::World;
 
-use crate::{
-    components::{
-        Player,
-    },
-};
+use crate::components::Player;
 
 pub fn load_player(world: &mut World) {
     // log::info!("[Load::Player] Name: Default_Flandre, Role: Default");

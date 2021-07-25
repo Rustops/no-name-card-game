@@ -1,7 +1,18 @@
-use amethyst::{Result,  audio::{AudioBundle, DjSystemDesc}, core::TransformBundle, ecs::{Component, VecStorage}, input::{InputBundle, StringBindings}, network::simulation::tcp::TcpNetworkBundle, prelude::*, renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle}, ui::{RenderUi, UiBundle}, utils::{application_root_dir, fps_counter::FpsCounterBundle}};
+use crate::{resources::Music, systems::chat::ChatroomBundle};
+use amethyst::{
+    audio::{AudioBundle, DjSystemDesc},
+    core::TransformBundle,
+    ecs::{Component, VecStorage},
+    input::{InputBundle, StringBindings},
+    network::simulation::tcp::TcpNetworkBundle,
+    prelude::*,
+    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    ui::{RenderUi, UiBundle},
+    utils::{application_root_dir, fps_counter::FpsCounterBundle},
+    Result,
+};
 use structopt::StructOpt;
 use systems::chat::ServerInfoResource;
-use crate::{resources::Music, systems::chat::ChatroomBundle};
 
 mod components;
 mod entities;

@@ -1,6 +1,4 @@
-use amethyst::{
-    ecs::{Component, DenseVecStorage},
-};
+use amethyst::ecs::{Component, DenseVecStorage};
 use std::convert::TryInto;
 
 use super::card::Card;
@@ -14,7 +12,7 @@ pub struct CardGroup {
 
 impl CardGroup {
     pub fn new() -> Self {
-        CardGroup { 
+        CardGroup {
             cards_num: 0,
             cards: Vec::new(),
         }

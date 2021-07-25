@@ -1,11 +1,10 @@
 use amethyst::{
     assets::AssetStorage,
-    audio::{output::Output, Source, SourceHandle, AudioSink, OggFormat},
     assets::Loader,
+    audio::{output::Output, AudioSink, OggFormat, Source, SourceHandle},
     ecs::{World, WorldExt},
-}
-
-;use std::{iter::Cycle, vec::IntoIter};
+};
+use std::{iter::Cycle, vec::IntoIter};
 
 const SOUND_BOOP: &str = "audio/boop.ogg";
 const SOUND_CONFIRM: &str = "audio/confirm.ogg";
@@ -13,8 +12,8 @@ const SOUND_CONFIRM: &str = "audio/confirm.ogg";
 const BGM_LOBBY: &str = "audio/bgm_lobby.ogg";
 const BGM_GAME: &str = "audio/bgm_game.ogg";
 
-const SOUND_TRACKS: &[&str] = &[SOUND_BOOP, SOUND_CONFIRM,];
-const MUSIC_TRACKS: &[&str] = &[BGM_LOBBY, BGM_GAME,];
+const SOUND_TRACKS: &[&str] = &[SOUND_BOOP, SOUND_CONFIRM];
+const MUSIC_TRACKS: &[&str] = &[BGM_LOBBY, BGM_GAME];
 
 pub struct Music {
     pub music: Cycle<IntoIter<SourceHandle>>,
@@ -51,9 +50,9 @@ pub fn initialize_audio(world: &mut World) {
             .iter()
             .map(|file| load_audio_track(&loader, &world, file))
             .collect::<Vec<_>>();
-        let sound = Sounds { 
+        let sound = Sounds {
             boop_sound: sound[0].clone(),
-            confirm_sound: sound[1].clone()
+            confirm_sound: sound[1].clone(),
         };
 
         (sound, music)
@@ -75,7 +74,11 @@ pub fn play_boop_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: 
 }
 
 #[allow(dead_code)]
-pub fn play_confirm_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
+pub fn play_confirm_sound(
+    sounds: &Sounds,
+    storage: &AssetStorage<Source>,
+    output: Option<&Output>,
+) {
     if let Some(ref output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.confirm_sound) {
             output.play_once(sound, 1.0);

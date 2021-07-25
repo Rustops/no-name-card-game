@@ -1,13 +1,21 @@
-use std::net::SocketAddr;
+use std::{convert::TryInto, net::SocketAddr};
 
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    network::simulation::{NetworkSimulationEvent, TransportResource},
+    network::{
+        simulation::{NetworkSimulationEvent, TransportResource},
+        Buf, Bytes,
+    },
     shrev::{EventChannel, ReaderId},
     Result,
 };
 use log::{error, info};
+
+// const HEARTBEAT_PU: &str = "HEARTBEAT:PU";
+// const HEARTBEAT_TONG: &str = "HEARTBEAT:TONG";
+const ENOUGH_PLAYER: &str = "There are already enough players in the room, do you want to start the game? please input Y/N.";
+const START_GAME: &str = "\nStart Game!";
 
 #[derive(Debug)]
 pub struct ChatReceiveBundle;
@@ -44,6 +52,8 @@ impl<'a, 'b> SystemDesc<'a, 'b, ChatReceiveSystem> for ChatReceiveSystemDesc {
 struct ChatReceiveSystem {
     reader: ReaderId<NetworkSimulationEvent>,
     connection: Vec<SocketAddr>,
+    online_num: u32,
+    game_room: Vec<SocketAddr>,
 }
 
 impl ChatReceiveSystem {
@@ -51,6 +61,8 @@ impl ChatReceiveSystem {
         Self {
             reader,
             connection: Vec::new(),
+            online_num: 0,
+            game_room: Vec::new(),
         }
     }
 }
@@ -76,15 +88,46 @@ impl<'a> System<'a> for ChatReceiveSystem {
                         .iter()
                         .map(|x| net.send(*x, payload))
                         .collect();
+
+                    // Check whether the player wants to play the game.
+                    if payload.eq(&Bytes::from("Y")) | payload.eq(&Bytes::from("y")) {
+                        self.game_room.push(*addr);
+                        info!("{} Confirm to play, total: {:?}", addr, self.game_room);
+
+                        if self.game_room.len() == 2 {
+                            info!("Players Enough");
+                            let _v: Vec<_> = self
+                                .game_room
+                                .iter()
+                                .map(|x| net.send(*x, START_GAME.as_bytes()))
+                                .collect();
+
+                            // Rest game_room
+                            self.game_room.clear();
+                        }
+                    }
                 }
                 NetworkSimulationEvent::Connect(addr) => {
                     info!("New client connection: {}", addr);
                     self.connection.push(*addr);
+                    self.online_num = self.connection.len().try_into().unwrap();
+                    info!("Online player num: {:?}", self.online_num);
+
+                    if self.online_num >= 2 {
+                        info!("Online players >= 2, send msg to players");
+                        let _v: Vec<_> = self
+                            .connection
+                            .iter()
+                            .map(|x| net.send(*x, ENOUGH_PLAYER.as_bytes()))
+                            .collect();
+                    }
                 }
                 NetworkSimulationEvent::Disconnect(addr) => {
                     info!("Client Disconnected: {}", addr);
                     let index = self.connection.iter().position(|x| *x == *addr).unwrap();
                     self.connection.remove(index);
+                    self.online_num = self.connection.len().try_into().unwrap();
+                    info!("Online player num: {:?}", self.online_num);
                 }
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);
