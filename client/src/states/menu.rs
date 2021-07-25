@@ -6,7 +6,7 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
-use super::{credits::CreditsScreen, game::Game, welcome::WelcomeScreen};
+use super::{credits::CreditsScreen, lobby::Lobby, welcome::WelcomeScreen};
 
 const BUTTON_START: &str = "start";
 const BUTTON_LOAD: &str = "load";
@@ -73,8 +73,8 @@ impl SimpleState for MainMenu {
                     return Trans::Switch(Box::new(CreditsScreen::default()));
                 }
                 if Some(target) == self.button_start {
-                    log::info!("[Trans::Switch] Switching to Game!");
-                    return Trans::Switch(Box::new(Game::default()));
+                    log::info!("[Trans::Switch] Switching to Lobby!");
+                    return Trans::Switch(Box::new(Lobby::default()));
                 }
                 if Some(target) == self.button_load || Some(target) == self.button_options {
                     log::info!("This Buttons functionality is not yet implemented!");

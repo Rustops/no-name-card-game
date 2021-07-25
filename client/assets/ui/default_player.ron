@@ -6,6 +6,7 @@ Image(
         x: 110,
         y: 140,
         anchor: BottomLeft,
+        transparent: true,
     ),
     image: Texture(File("character/flandre.png", ("IMAGE", ()))),
 )

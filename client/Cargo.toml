@@ -12,4 +12,5 @@ structopt = "0.3.22"
 
 [features]
 default = ["vulkan"]
+metal = ["amethyst/metal"]
 vulkan = ["amethyst/vulkan"]

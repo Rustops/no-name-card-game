@@ -14,6 +14,9 @@ use amethyst::{
 use structopt::StructOpt;
 use systems::chat::ServerInfoResource;
 
+mod components;
+mod entities;
+mod resources;
 mod states;
 mod systems;
 
