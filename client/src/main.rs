@@ -1,18 +1,7 @@
-use crate::systems::chat::ChatroomBundle;
-use amethyst::{
-    audio::AudioBundle,
-    core::TransformBundle,
-    ecs::{Component, VecStorage},
-    input::{InputBundle, StringBindings},
-    network::simulation::tcp::TcpNetworkBundle,
-    prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
-    ui::{RenderUi, UiBundle},
-    utils::{application_root_dir, fps_counter::FpsCounterBundle},
-    Result,
-};
+use amethyst::{Result,  audio::{AudioBundle, DjSystemDesc}, core::TransformBundle, ecs::{Component, VecStorage}, input::{InputBundle, StringBindings}, network::simulation::tcp::TcpNetworkBundle, prelude::*, renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle}, ui::{RenderUi, UiBundle}, utils::{application_root_dir, fps_counter::FpsCounterBundle}};
 use structopt::StructOpt;
 use systems::chat::ServerInfoResource;
+use crate::{resources::Music, systems::chat::ChatroomBundle};
 
 mod components;
 mod entities;
@@ -58,11 +47,6 @@ impl Client {
             .with_bundle(InputBundle::<StringBindings>::new())?
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
-            .with_system_desc(
-                systems::events::UiEventHandlerSystemDesc,
-                "ui_event_handler",
-                &[],
-            )
             .with_bundle(FpsCounterBundle)?
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::new()
@@ -73,7 +57,17 @@ impl Client {
                     .with_plugin(RenderUi::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
-            .with_bundle(ChatroomBundle::new(server_info))?;
+            .with_bundle(ChatroomBundle::new(server_info))?
+            .with_system_desc(
+                DjSystemDesc::new(|music: &mut Music| music.music.next()),
+                "dj_system",
+                &[],
+            )
+            .with_system_desc(
+                systems::events::UiEventHandlerSystemDesc,
+                "ui_event_handler",
+                &[],
+            );
         let mut game = Application::new(
             assets_dir,
             states::welcome::WelcomeScreen::default(),

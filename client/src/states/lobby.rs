@@ -9,6 +9,7 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
+use crate::resources::initialize_audio;
 use super::game::Game;
 use super::pause::PauseMenuState;
 
@@ -35,6 +36,7 @@ impl SimpleState for Lobby {
 
         self.ui_root =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/lobby.ron", ())));
+        initialize_audio(world);
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {

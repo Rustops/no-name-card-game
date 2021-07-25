@@ -5,6 +5,7 @@ use amethyst::{
     ui::UiCreator,
     winit::{MouseButton, VirtualKeyCode},
 };
+use crate::resources::initialize_audio;
 
 #[derive(Default, Debug)]
 pub struct WelcomeScreen {
@@ -17,6 +18,7 @@ impl SimpleState for WelcomeScreen {
 
         self.ui_handle =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/welcome.ron", ())));
+        initialize_audio(world);
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
