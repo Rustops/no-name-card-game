@@ -10,9 +10,6 @@ use amethyst::{
 };
 
 use super::pause::PauseMenuState;
-
-use crate::entities::load_player;
-
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
 /// 'pausing'.
@@ -39,9 +36,9 @@ impl SimpleState for Game {
 
         self.ui_root =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/game.ron", ())));
-        self.player_display = Some(
-            world.exec(|mut creator: UiCreator<'_>| creator.create("ui/default_player.ron", ())),
-        );
+        // self.player_display = Some(
+        //     world.exec(|mut creator: UiCreator<'_>| creator.create("ui/default_player.ron", ())),
+        // );
 
         // load_player(world);
     }
@@ -79,7 +76,7 @@ impl SimpleState for Game {
                     Trans::None
                 }
             }
-            StateEvent::Ui(ui_event) => {
+            StateEvent::Ui(_ui_event) => {
                 // log::info!(
                 //     "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
                 //     ui_event

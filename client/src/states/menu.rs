@@ -6,8 +6,6 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
-use crate::resources::play_confirm_sound;
-
 use super::{credits::CreditsScreen, lobby::Lobby, welcome::WelcomeScreen};
 
 const BUTTON_START: &str = "start";
@@ -76,10 +74,10 @@ impl SimpleState for MainMenu {
 
     fn handle_event(
         &mut self,
-        state_data: StateData<'_, GameData>,
+        _state_data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
-        let StateData { world, .. } = state_data;
+        // let StateData { world, .. } = state_data;
 
         match event {
             StateEvent::Window(event) => {

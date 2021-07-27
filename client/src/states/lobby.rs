@@ -9,9 +9,8 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
-use super::game::Game;
 use super::pause::PauseMenuState;
-use crate::resources::initialize_audio;
+use crate::{entities::load_player, resources::initialize_audio};
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
@@ -36,8 +35,9 @@ impl SimpleState for Lobby {
 
         self.ui_root =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/lobby.ron", ())));
-        world.exec(|mut creator: UiCreator<'_>| creator.create("ui/default_player.ron", ()));
+
         initialize_audio(world);
+        load_player(world)
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {
@@ -79,7 +79,7 @@ impl SimpleState for Lobby {
                     Trans::None
                 }
             }
-            StateEvent::Ui(ui_event) => {
+            StateEvent::Ui(_ui_event) => {
                 // log::info!(
                 //     "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
                 //     ui_event

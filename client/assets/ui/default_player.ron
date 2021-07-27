@@ -4,15 +4,27 @@ Container(
         id: "player_container",
         anchor: Middle,
         stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
-        width: 200.,
-        height: 250.,
+        width: 20.,
+        height: 20.,
     ),
     children:[
         Image(
             transform: (
+                id: "frame",
+                width: 160.,
+                height: 210.,
+                x: 110,
+                y: 140,
+                anchor: BottomLeft,
+                transparent: false,
+            ),
+            image: Texture(File("texture/actor_single_frame.png", ("IMAGE", ()))),
+        ),
+        Image(
+            transform: (
                 id: "flandre",
-                width: 182.,
-                height: 250.,
+                width: 150.,
+                height: 200.,
                 x: 110,
                 y: 140,
                 anchor: BottomLeft,

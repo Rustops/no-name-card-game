@@ -18,12 +18,24 @@ impl Default for PlayerState {
     }
 }
 
+#[derive(Debug)]
+
+pub enum PlayerRole {
+    Flandre,
+}
+
+impl Default for PlayerRole {
+    fn default() -> Self {
+        Self::Flandre
+    }
+}
+
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Player {
     pub state: PlayerState,
     pub is_playing: bool,
-    // pub role: ,
+    pub role: PlayerRole,
 }
 
 impl Player {
@@ -31,6 +43,7 @@ impl Player {
         Player {
             state: PlayerState::Chatting,
             is_playing: false,
+            role: PlayerRole::Flandre,
         }
     }
 }

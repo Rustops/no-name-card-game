@@ -5,7 +5,7 @@ use amethyst::{
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     network::{
         simulation::{NetworkSimulationEvent, TransportResource},
-        Buf, Bytes,
+        Bytes,
     },
     shrev::{EventChannel, ReaderId},
     Result,
