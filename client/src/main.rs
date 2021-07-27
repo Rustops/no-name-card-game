@@ -1,6 +1,6 @@
-use crate::systems::chat::ChatroomBundle;
+use crate::{resources::Music, systems::chat::ChatroomBundle};
 use amethyst::{
-    audio::AudioBundle,
+    audio::{AudioBundle, DjSystemDesc},
     core::TransformBundle,
     ecs::{Component, VecStorage},
     input::{InputBundle, StringBindings},
@@ -14,6 +14,9 @@ use amethyst::{
 use structopt::StructOpt;
 use systems::chat::ServerInfoResource;
 
+mod components;
+mod entities;
+mod resources;
 mod states;
 mod systems;
 
@@ -55,11 +58,6 @@ impl Client {
             .with_bundle(InputBundle::<StringBindings>::new())?
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
-            .with_system_desc(
-                systems::events::UiEventHandlerSystemDesc,
-                "ui_event_handler",
-                &[],
-            )
             .with_bundle(FpsCounterBundle)?
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::new()
@@ -70,7 +68,17 @@ impl Client {
                     .with_plugin(RenderUi::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
-            .with_bundle(ChatroomBundle::new(server_info))?;
+            .with_bundle(ChatroomBundle::new(server_info))?
+            .with_system_desc(
+                DjSystemDesc::new(|music: &mut Music| music.music.next()),
+                "dj_system",
+                &[],
+            )
+            .with_system_desc(
+                systems::events::UiEventHandlerSystemDesc,
+                "ui_event_handler",
+                &[],
+            );
         let mut game = Application::new(
             assets_dir,
             states::welcome::WelcomeScreen::default(),

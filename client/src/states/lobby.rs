@@ -10,24 +10,23 @@ use amethyst::{
 };
 
 use super::pause::PauseMenuState;
+use crate::{entities::load_player, resources::initialize_audio};
+
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
 /// 'pausing'.
 
 #[derive(Default)]
-pub struct Game {
+pub struct Lobby {
     // If the Game is paused or not
     paused: bool,
-    // If the assets is loaded already
-    // progress_counter: Option<ProgressCounter>,
     // The UI root entity. Deleting this should remove the complete UI
     ui_root: Option<Entity>,
     // A reference to the FPS display, which we want to interact with
     fps_display: Option<Entity>,
-    player_display: Option<Entity>,
 }
 
-impl SimpleState for Game {
+impl SimpleState for Lobby {
     fn on_start(&mut self, data: StateData<'_, GameData>) {
         let StateData { mut world, .. } = data;
 
@@ -35,12 +34,10 @@ impl SimpleState for Game {
         init_output(&mut world);
 
         self.ui_root =
-            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/game.ron", ())));
-        // self.player_display = Some(
-        //     world.exec(|mut creator: UiCreator<'_>| creator.create("ui/default_player.ron", ())),
-        // );
+            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/lobby.ron", ())));
 
-        // load_player(world);
+        initialize_audio(world);
+        load_player(world)
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {
@@ -60,7 +57,6 @@ impl SimpleState for Game {
 
         self.ui_root = None;
         self.fps_display = None;
-        self.player_display = None;
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -70,9 +66,16 @@ impl SimpleState for Game {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit
                 } else if is_key_down(&event, VirtualKeyCode::Escape) {
-                    log::info!("[Trans::Push] Pausing Game!");
+                    log::info!("[Trans::Push] Pausing in lobby!");
                     Trans::Push(Box::new(PauseMenuState::default()))
-                } else {
+                }
+                // else if is_key_down(&event, VirtualKeyCode::Return)
+                //     | is_key_down(&event, VirtualKeyCode::Space)
+                // {
+                //     log::info!("[Trans::Switch] Switching To Game!");
+                //     Trans::Switch(Box::new(Game::default()))
+                // }
+                else {
                     Trans::None
                 }
             }
@@ -99,14 +102,6 @@ impl SimpleState for Game {
             world.exec(|finder: UiFinder<'_>| {
                 if let Some(entity) = finder.find("fps") {
                     self.fps_display = Some(entity);
-                }
-            });
-        }
-
-        if self.player_display.is_none() {
-            world.exec(|finder: UiFinder<'_>| {
-                if let Some(entity) = finder.find("flandre") {
-                    self.player_display = Some(entity);
                 }
             });
         }

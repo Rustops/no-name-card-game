@@ -1,3 +1,4 @@
+use crate::resources::initialize_audio;
 use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down, is_mouse_button_down},
@@ -17,6 +18,7 @@ impl SimpleState for WelcomeScreen {
 
         self.ui_handle =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/welcome.ron", ())));
+        initialize_audio(world);
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
