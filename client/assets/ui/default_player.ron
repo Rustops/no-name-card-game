@@ -1,12 +1,24 @@
-Image(
+#![enable(implicit_some)]
+Container(
     transform: (
-        id: "flandre",
-        width: 182.,
+        id: "player_container",
+        anchor: Middle,
+        stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
+        width: 200.,
         height: 250.,
-        x: 110,
-        y: 140,
-        anchor: BottomLeft,
-        transparent: true,
     ),
-    image: Texture(File("character/flandre.png", ("IMAGE", ()))),
+    children:[
+        Image(
+            transform: (
+                id: "flandre",
+                width: 182.,
+                height: 250.,
+                x: 110,
+                y: 140,
+                anchor: BottomLeft,
+                transparent: true,
+            ),
+            image: Texture(File("character/flandre.png", ("IMAGE", ()))),
+        )
+    ]
 )

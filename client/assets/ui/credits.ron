@@ -8,9 +8,7 @@ Container(
         height: 20.,
     ),
     background: SolidColor(0.03, 0.03, 0.03, 1.0),
-
     children: [
-
         Label(
             transform: (
                 id: "credits_label",

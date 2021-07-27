@@ -36,6 +36,7 @@ impl SimpleState for Lobby {
 
         self.ui_root =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/lobby.ron", ())));
+        world.exec(|mut creator: UiCreator<'_>| creator.create("ui/default_player.ron", ()));
         initialize_audio(world);
     }
 
