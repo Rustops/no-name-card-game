@@ -4,12 +4,6 @@ use amethyst::ecs::{Component, DenseVecStorage};
 pub enum PlayerState {
     // The game has not startedm, players are chatting
     Chatting,
-    // Lost all health
-    Dying,
-    // Executing a round
-    Playing,
-    // Waiting for the round
-    Waiting,
 }
 
 impl Default for PlayerState {
