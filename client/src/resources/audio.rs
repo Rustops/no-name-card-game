@@ -40,7 +40,7 @@ pub fn initialize_audio(world: &mut World) {
 
         let music = MUSIC_TRACKS
             .iter()
-            .map(|file| load_audio_track(&loader, &world, file))
+            .map(|file| load_audio_track(&loader, world, file))
             .collect::<Vec<_>>()
             .into_iter()
             .cycle();
@@ -48,7 +48,7 @@ pub fn initialize_audio(world: &mut World) {
 
         let sound = SOUND_TRACKS
             .iter()
-            .map(|file| load_audio_track(&loader, &world, file))
+            .map(|file| load_audio_track(&loader, world, file))
             .collect::<Vec<_>>();
         let sound = Sounds {
             boop_sound: sound[0].clone(),
@@ -66,7 +66,7 @@ pub fn initialize_audio(world: &mut World) {
 
 #[allow(dead_code)]
 pub fn play_boop_sound(sounds: &Sounds, storage: &AssetStorage<Source>, output: Option<&Output>) {
-    if let Some(ref output) = output.as_ref() {
+    if let Some(output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.boop_sound) {
             output.play_once(sound, 1.0);
         }
@@ -79,7 +79,7 @@ pub fn play_confirm_sound(
     storage: &AssetStorage<Source>,
     output: Option<&Output>,
 ) {
-    if let Some(ref output) = output.as_ref() {
+    if let Some(output) = output.as_ref() {
         if let Some(sound) = storage.get(&sounds.confirm_sound) {
             output.play_once(sound, 1.0);
         }

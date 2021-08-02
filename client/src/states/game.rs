@@ -66,10 +66,10 @@ impl SimpleState for Game {
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
         match &event {
             StateEvent::Window(event) => {
-                if is_close_requested(&event) {
+                if is_close_requested(event) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit
-                } else if is_key_down(&event, VirtualKeyCode::Escape) {
+                } else if is_key_down(event, VirtualKeyCode::Escape) {
                     log::info!("[Trans::Push] Pausing Game!");
                     Trans::Push(Box::new(PauseMenuState::default()))
                 } else {
