@@ -1,6 +1,6 @@
 use amethyst::{ecs::Entity, SimpleState};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Select {
     ui_root: Option<Entity>,
 }

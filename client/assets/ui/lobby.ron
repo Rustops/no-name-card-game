@@ -19,6 +19,38 @@ Container(
             ),
             image: Texture(File("texture/bg_gamelobby.png", ("IMAGE", ()))),
         ),
+        // Start game (switch to game state)
+        Container(
+            transform: (
+                id: "container_start",
+                x: -150,
+                width: 100.,
+                height: 50.,
+                anchor: MiddleRight,
+            ),
+            background: SolidColor(1.0, 0.65, 0.0, 1.0),
+            children: [
+                Button(
+                    transform: (
+                        id: "lobby_start",
+                        width: 100.,
+                        height: 50.,
+                        tab_order: 1,
+                        anchor: Middle,
+                        mouse_reactive: true,
+                    ),
+                    button: (
+                        text: "开始游戏",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 25.,
+                        normal_text_color: (0.7, 0.1, 0.11, 1.0),
+                        normal_image: Texture(File("texture/menu_btn_normal.png", ("IMAGE", ()))),
+                        hover_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
+                        press_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
+                    )
+                ),
+            ]
+        ),
         // Chatbox input
         Container(
             transform: (
