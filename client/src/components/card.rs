@@ -7,5 +7,3 @@ pub struct Card {
     pub damage: u32,
     //......
 }
-
-

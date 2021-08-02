@@ -14,4 +14,3 @@ pub struct Equipment {
     // Reduces enemy's calculated distance from you
     pub defend_horse: Card,
 }
-
