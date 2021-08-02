@@ -70,14 +70,7 @@ impl SimpleState for Lobby {
                 } else if is_key_down(&event, VirtualKeyCode::Escape) {
                     log::info!("[Trans::Push] Pausing in lobby!");
                     Trans::Push(Box::new(PauseMenuState::default()))
-                }
-                // else if is_key_down(&event, VirtualKeyCode::Return)
-                //     | is_key_down(&event, VirtualKeyCode::Space)
-                // {
-                //     log::info!("[Trans::Switch] Switching To Game!");
-                //     Trans::Switch(Box::new(Game::default()))
-                // }
-                else {
+                } else {
                     Trans::None
                 }
             }
