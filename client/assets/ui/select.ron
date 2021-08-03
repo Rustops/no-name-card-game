@@ -1,0 +1,25 @@
+#![enable(implicit_some)]
+Container(
+    transform: (
+        id: "select_ui",
+        anchor: Middle,
+        stretch: XY( x_margin: 0.0, y_margin: 0.0, keep_aspect_ratio: true),
+        z: 3.0,
+        width: 1920.0,
+        height: 1080.0,
+    ),
+    background: SolidColor(0.0, 0.0, 0.0, 0.5),
+    children: [
+        Image(
+            transform: (
+                id: "select_background",
+                width: 640.,
+                height: 400.,
+                z: 3.0,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            image: Texture(File("texture/bg_gamelist.png", ("IMAGE", ()))),
+        ),
+    ]
+)

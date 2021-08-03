@@ -1,4 +1,4 @@
-use amethyst::{ecs::Entity, SimpleState};
+use amethyst::{audio::output::init_output, ecs::Entity, ui::UiCreator, SimpleState, StateData};
 
 #[derive(Debug, Default)]
 pub struct Select {
@@ -6,7 +6,15 @@ pub struct Select {
 }
 
 impl SimpleState for Select {
-    fn on_start(&mut self, _data: amethyst::StateData<'_, amethyst::GameData<'_, '_>>) {}
+    fn on_start(&mut self, data: amethyst::StateData<'_, amethyst::GameData<'_, '_>>) {
+        let StateData { mut world, .. } = data;
+
+        // needed for registering audio output.
+        init_output(&mut world);
+
+        self.ui_root =
+            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/select.ron", ())));
+    }
 
     fn on_pause(&mut self, _data: amethyst::StateData<'_, amethyst::GameData<'_, '_>>) {}
 
