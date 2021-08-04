@@ -1,3 +1,1 @@
-mod player;
-
-pub use self::player::load_player;
+pub mod player;
