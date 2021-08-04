@@ -33,6 +33,7 @@ pub struct Player {
 }
 
 impl Player {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Player {
             state: PlayerState::Chatting,

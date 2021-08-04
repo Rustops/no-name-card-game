@@ -2,9 +2,9 @@ use amethyst::{ecs::prelude::World, ui::UiCreator};
 
 use crate::components::{Player, PlayerRole};
 
-pub fn load_player(world: &mut World) {
+pub fn _load_player(world: &mut World) {
     let player = Player::new();
-    load_player_role(world, player);
+    _load_player_role(world, player);
     // log::info!("[Load::Player] Name: Default_Flandre, Role: Default");
     // world
     //     .create_entity()
@@ -12,7 +12,7 @@ pub fn load_player(world: &mut World) {
     //     .build();
 }
 
-pub fn load_player_role(world: &mut World, player: Player) {
+pub fn _load_player_role(world: &mut World, player: Player) {
     let img_path = match player.role {
         PlayerRole::Flandre => "ui/default_player.ron",
     };

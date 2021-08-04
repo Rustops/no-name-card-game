@@ -10,7 +10,7 @@ use amethyst::{
 };
 
 use super::pause::PauseMenuState;
-use crate::{entities::load_player, resources::initialize_audio, states::select::Select};
+use crate::{resources::initialize_audio, states::select::SelectState};
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
@@ -39,7 +39,7 @@ impl SimpleState for Lobby {
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/lobby.ron", ())));
 
         initialize_audio(world);
-        load_player(world)
+        // load_player(world)
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {
@@ -80,7 +80,7 @@ impl SimpleState for Lobby {
             }) => {
                 if Some(target) == self.start_game {
                     log::info!("[Trans::Switch] Switching to Select!");
-                    return Trans::Switch(Box::new(Select::default()));
+                    return Trans::Push(Box::new(SelectState::default()));
                 }
                 Trans::None
             }

@@ -1,16 +1,13 @@
-use amethyst::{audio::output::init_output, ecs::Entity, ui::UiCreator, SimpleState, StateData};
+use amethyst::{ecs::Entity, ui::UiCreator, SimpleState};
 
 #[derive(Debug, Default)]
-pub struct Select {
+pub struct SelectState {
     ui_root: Option<Entity>,
 }
 
-impl SimpleState for Select {
+impl SimpleState for SelectState {
     fn on_start(&mut self, data: amethyst::StateData<'_, amethyst::GameData<'_, '_>>) {
-        let StateData { mut world, .. } = data;
-
-        // needed for registering audio output.
-        init_output(&mut world);
+        let world = data.world;
 
         self.ui_root =
             Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/select.ron", ())));
