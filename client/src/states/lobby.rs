@@ -4,13 +4,13 @@ use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down},
     prelude::*,
-    ui::{UiCreator, UiFinder, UiText},
+    ui::{UiCreator, UiEvent, UiEventType, UiFinder, UiText},
     utils::fps_counter::FpsCounter,
     winit::VirtualKeyCode,
 };
 
 use super::pause::PauseMenuState;
-use crate::{entities::load_player, resources::initialize_audio};
+use crate::{entities::load_player, resources::initialize_audio, states::select::Select};
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
 /// The main differences include the added 'paused' field in the state, which is toggled when
@@ -24,6 +24,8 @@ pub struct Lobby {
     ui_root: Option<Entity>,
     // A reference to the FPS display, which we want to interact with
     fps_display: Option<Entity>,
+    // A button to start game
+    start_game: Option<Entity>,
 }
 
 impl SimpleState for Lobby {
@@ -60,7 +62,7 @@ impl SimpleState for Lobby {
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
-        match &event {
+        match event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) {
                     log::info!("[Trans::Quit] Quitting Application!");
@@ -68,28 +70,25 @@ impl SimpleState for Lobby {
                 } else if is_key_down(&event, VirtualKeyCode::Escape) {
                     log::info!("[Trans::Push] Pausing in lobby!");
                     Trans::Push(Box::new(PauseMenuState::default()))
-                }
-                // else if is_key_down(&event, VirtualKeyCode::Return)
-                //     | is_key_down(&event, VirtualKeyCode::Space)
-                // {
-                //     log::info!("[Trans::Switch] Switching To Game!");
-                //     Trans::Switch(Box::new(Game::default()))
-                // }
-                else {
+                } else {
                     Trans::None
                 }
             }
-            StateEvent::Ui(_ui_event) => {
-                // log::info!(
-                //     "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
-                //     ui_event
-                // );
+            StateEvent::Ui(UiEvent {
+                event_type: UiEventType::Click,
+                target,
+            }) => {
+                if Some(target) == self.start_game {
+                    log::info!("[Trans::Switch] Switching to Select!");
+                    return Trans::Switch(Box::new(Select::default()));
+                }
                 Trans::None
             }
             StateEvent::Input(_input) => {
                 // log::info!("Input Event detected: {:?}.", input);
                 Trans::None
             }
+            _ => Trans::None,
         }
     }
 
@@ -102,6 +101,14 @@ impl SimpleState for Lobby {
             world.exec(|finder: UiFinder<'_>| {
                 if let Some(entity) = finder.find("fps") {
                     self.fps_display = Some(entity);
+                }
+            });
+        }
+
+        if self.start_game.is_none() {
+            world.exec(|finder: UiFinder<'_>| {
+                if let Some(entity) = finder.find("lobby_start") {
+                    self.start_game = Some(entity);
                 }
             });
         }

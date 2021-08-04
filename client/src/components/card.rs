@@ -7,12 +7,3 @@ pub struct Card {
     pub damage: u32,
     //......
 }
-
-impl Card {
-    pub fn new() -> Self {
-        Card {
-            name: String::from("default_card"),
-            damage: 0,
-        }
-    }
-}

@@ -10,19 +10,3 @@ pub struct Context {
     pub platform_z_translation: f32,
     pub scale: f32,
 }
-
-impl Context {
-    pub fn new() -> Self {
-        Context {
-            map_width: 4608.,
-            bg_width: 384.,
-            bg_height: 352.,
-            x_correction: -(1200. / 2. - 384.), // - (screen_width / 2. - background_width)
-            y_correction: -176.,                // (background_height / 2.) * -1.
-            bg_z_translation: -50.,
-            truss_z_translation: -40.,
-            platform_z_translation: -10.,
-            scale: 2.,
-        }
-    }
-}

@@ -2,7 +2,7 @@
 // Detailed field information can be found at https://docs.amethyst.rs/master/amethyst_ui/enum.UiWidget.html and related pages
 Container(
     transform: (
-        id: "background",
+        id: "menu_transform",
         anchor: Middle,
         stretch: XY( x_margin: 0., y_margin: 0., keep_aspect_ratio: false),
         width: 20.,
@@ -11,7 +11,7 @@ Container(
     children: [
         Image(
             transform: (
-                id: "background",
+                id: "menu_background",
                 width: 1280.,
                 height: 720.,
                 anchor: Middle,
