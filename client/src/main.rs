@@ -73,7 +73,7 @@ impl Client {
                     .with_plugin(RenderUi::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
-            .with_bundle(ChatroomBundle::new(server_info))?
+            .with_bundle(ChatroomBundle::new(server_info, self.name))?
             .with_system_desc(
                 DjSystemDesc::new(|music: &mut Music| music.music.next()),
                 "dj_system",

@@ -15,14 +15,18 @@ use super::play_sfx::SoundEvent;
 
 const SERVER_ADDRESS: &str = "127.0.0.1:6666";
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ChatroomBundle {
     server_info: ServerInfoResource,
+    client_info: String,
 }
 
 impl ChatroomBundle {
-    pub fn new(server_info: ServerInfoResource) -> Self {
-        Self { server_info }
+    pub fn new(server_info: ServerInfoResource, client_info: String) -> Self {
+        Self {
+            server_info,
+            client_info,
+        }
     }
 }
 
@@ -86,7 +90,7 @@ impl<'a> System<'a> for ChatroomSystem {
     #[allow(clippy::type_complexity)]
     type SystemData = (
         // ReadStorage<'a, ServerInfoResource>,
-        Read<'a, ServerInfoResource>,
+        Read<'a, ChatroomBundle>,
         UiFinder<'a>,
         Read<'a, EventChannel<UiEvent>>,
         Read<'a, NetworkSimulationTime>,
@@ -100,7 +104,7 @@ impl<'a> System<'a> for ChatroomSystem {
     fn run(
         &mut self,
         (
-            server_info,
+            chatroom_info,
             ui_finder,
             ui_event,
             _sim_time,
@@ -120,11 +124,12 @@ impl<'a> System<'a> for ChatroomSystem {
                     sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
                     let msg = input.text.clone();
                     info!(
-                        "[{}] Sending message: {}",
+                        "[{}][{}] Sending message: {}",
                         time.absolute_time_seconds(),
+                        chatroom_info.client_info,
                         &msg
                     );
-                    net.send(server_info.get_addr(), msg.as_bytes());
+                    net.send(chatroom_info.server_info.get_addr(), msg.as_bytes());
                     input.text = String::from("");
                 }
             });
@@ -132,7 +137,11 @@ impl<'a> System<'a> for ChatroomSystem {
         for event in event.read(&mut self.network_reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
-                    info!("Recv msg: {:?} from {}", payload, addr);
+                    // Highly centralized
+                    if addr.to_string() != chatroom_info.server_info.addr {
+                        continue;
+                    }
+                    info!("Recv msg: {:?} from Server {}", payload, addr);
                     self.find_ui_elements(&ui_finder);
 
                     if let Some(chat_output) = self.chat_output {
