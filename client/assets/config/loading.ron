@@ -1,0 +1,21 @@
+// Deserialises to a LoadingConfig struct.
+(
+    uis: [
+        (Credits, "ui/credits.ron"),
+        (DefaultPlayer, "ui/default_player.ron"),
+        (Game, "ui/game.ron"),
+        (Lobby, "ui/lobby.ron"),
+        (MainMenu, "ui/main_menu.ron"),
+        (PauseMenu, "ui/pause_menu.ron"),
+        (CharacterSelection, "ui/select_character.ron"),
+        (Welcome, "ui/welcome.ron"),
+    ],
+    sound_effects: [
+        (Confirm, "audio/sound_effects/confirm.ogg"),
+        (Boop, "audio/sound_effects/boop.ogg"),
+    ],
+    music_tracks: [
+        "audio/music/bgm_game.ogg",
+        "audio/music/bgm_lobby.ogg",
+    ],
+)

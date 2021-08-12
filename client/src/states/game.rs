@@ -1,13 +1,14 @@
 use amethyst::{
-    audio::output::init_output,
     core::Time,
     ecs::Entity,
     input::{is_close_requested, is_key_down},
     prelude::*,
-    ui::{UiCreator, UiFinder, UiText},
+    ui::{UiFinder, UiText},
     utils::fps_counter::FpsCounter,
     winit::VirtualKeyCode,
 };
+
+use crate::resources::{UiHandles, UiType};
 
 use super::pause::PauseMenuState;
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
@@ -27,15 +28,22 @@ pub struct Game {
     player_display: Option<Entity>,
 }
 
+impl Game {
+    fn init_ui(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+        self.ui_root = UiHandles::add_ui(UiType::Game, data.world);
+        // invoke a world update to finish creating our ui entities
+        data.data.update(data.world);
+    }
+}
+
 impl SimpleState for Game {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let StateData { mut world, .. } = data;
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        self.init_ui(&mut data);
+        // let StateData { mut world, .. } = data;
 
         // needed for registering audio output.
-        init_output(&mut world);
+        // init_output(&mut world);
 
-        self.ui_root =
-            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/game.ron", ())));
         // self.player_display = Some(
         //     world.exec(|mut creator: UiCreator<'_>| creator.create("ui/default_player.ron", ())),
         // );

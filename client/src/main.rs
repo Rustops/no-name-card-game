@@ -8,17 +8,24 @@ use amethyst::{
     prelude::*,
     renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
     ui::{RenderUi, UiBundle},
-    utils::{application_root_dir, fps_counter::FpsCounterBundle},
+    utils::fps_counter::FpsCounterBundle,
     Result,
 };
+use states::loading::LoadingState;
 use structopt::StructOpt;
-use systems::chat::ServerInfoResource;
 
 mod components;
 mod entities;
 mod resources;
 mod states;
 mod systems;
+mod utilities;
+
+use systems::{chat::ServerInfoResource, play_sfx::PlaySfxSystem};
+use utilities::{
+    files::{get_assets_dir, get_config_dir},
+    startup::start_game,
+};
 
 fn main() -> amethyst::Result<()> {
     let client = Client::init();
@@ -49,9 +56,7 @@ impl Client {
 
         amethyst::start_logger(Default::default());
 
-        let app_root_path = application_root_dir()?;
-        let display_config_path = app_root_path.join("config").join("display.ron");
-        let assets_dir = app_root_path.join("assets");
+        let display_config_path = get_config_dir().join("display.ron");
 
         let game_data = GameDataBuilder::default()
             .with_bundle(TransformBundle::new())?
@@ -74,20 +79,19 @@ impl Client {
                 "dj_system",
                 &[],
             )
+            .with(PlaySfxSystem::default(), "play_sfx_system", &[])
             .with_system_desc(
                 systems::events::UiEventHandlerSystemDesc,
                 "ui_event_handler",
                 &[],
             );
-        let mut game = Application::new(
-            assets_dir,
-            states::welcome::WelcomeScreen::default(),
-            game_data,
-        )?;
 
-        log::info!("Starting with WelcomeScreen!");
-        game.run();
-        log::info!("Game exit!");
+        start_game(
+            get_assets_dir(),
+            game_data,
+            Some(Box::new(LoadingState::default())),
+        );
+
         Ok(())
     }
 }
