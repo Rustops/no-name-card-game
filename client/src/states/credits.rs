@@ -2,9 +2,10 @@ use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down, is_mouse_button_down},
     prelude::*,
-    ui::UiCreator,
     winit::{MouseButton, VirtualKeyCode},
 };
+
+use crate::resources::{UiHandles, UiType};
 
 use super::menu::MainMenu;
 // A simple 'Screen' State, only capable of loading/showing the prefab ui and registering simple
@@ -12,15 +13,20 @@ use super::menu::MainMenu;
 
 #[derive(Debug, Default)]
 pub struct CreditsScreen {
-    ui_handle: Option<Entity>,
+    ui_root: Option<Entity>,
+}
+
+impl CreditsScreen {
+    fn init_ui(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+        self.ui_root = UiHandles::add_ui(UiType::Credits, data.world);
+        // invoke a world update to finish creating our ui entities
+        data.data.update(data.world);
+    }
 }
 
 impl SimpleState for CreditsScreen {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let world = data.world;
-
-        self.ui_handle =
-            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/credits.ron", ())));
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        self.init_ui(&mut data);
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
@@ -43,12 +49,12 @@ impl SimpleState for CreditsScreen {
     }
 
     fn on_stop(&mut self, data: StateData<GameData>) {
-        if let Some(root_entity) = self.ui_handle {
+        if let Some(root_entity) = self.ui_root {
             data.world
                 .delete_entity(root_entity)
                 .expect("Failed to remove CreditScreen");
         }
 
-        self.ui_handle = None;
+        self.ui_root = None;
     }
 }
