@@ -1,9 +1,8 @@
-use crate::resources::initialize_audio;
+use crate::resources::{UiHandles, UiType};
 use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down, is_mouse_button_down},
     prelude::*,
-    ui::UiCreator,
     winit::{MouseButton, VirtualKeyCode},
 };
 
@@ -12,13 +11,18 @@ pub struct WelcomeScreen {
     ui_handle: Option<Entity>,
 }
 
-impl SimpleState for WelcomeScreen {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-        let world = data.world;
+impl WelcomeScreen {
+    fn init_ui(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+        self.ui_handle = UiHandles::add_ui(UiType::Welcome, data.world);
+        // invoke a world update to finish creating our ui entities
+        data.data.update(data.world);
+    }
+}
 
-        self.ui_handle =
-            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/welcome.ron", ())));
-        initialize_audio(world);
+impl SimpleState for WelcomeScreen {
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        self.init_ui(&mut data);
+        // initialize_audio(data.world);
     }
 
     fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {

@@ -9,6 +9,10 @@ use amethyst::{
 use log::{error, info};
 use std::net::SocketAddr;
 
+use crate::resources::SoundType;
+
+use super::play_sfx::SoundEvent;
+
 const SERVER_ADDRESS: &str = "127.0.0.1:6666";
 
 #[derive(Debug)]
@@ -90,17 +94,30 @@ impl<'a> System<'a> for ChatroomSystem {
         Write<'a, TransportResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
         WriteStorage<'a, UiText>,
+        Write<'a, EventChannel<SoundEvent>>,
     );
 
     fn run(
         &mut self,
-        (server_info, ui_finder, ui_event, _sim_time, time, mut net, event, mut ui_text): Self::SystemData,
+        (
+            server_info,
+            ui_finder,
+            ui_event,
+            _sim_time,
+            time,
+            mut net,
+            event,
+            mut ui_text,
+            mut sound_channel,
+        ): Self::SystemData,
     ) {
         ui_event
             .read(&mut self.ui_reader)
             .filter(|event| event.event_type == UiEventType::ValueCommit)
             .for_each(|event| {
                 if let Some(input) = ui_text.get_mut(event.target) {
+                    // play sound_effect
+                    sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
                     let msg = input.text.clone();
                     info!(
                         "[{}] Sending message: {}",

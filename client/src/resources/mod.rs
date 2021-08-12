@@ -1,5 +1,13 @@
+mod assets;
 mod audio;
+mod config;
 mod context;
+mod gui;
+mod userdata;
 
-pub use self::audio::{initialize_audio, play_boop_sound, play_confirm_sound, Music, Sounds};
+pub use self::assets::*;
+pub use self::audio::*;
+pub use self::config::*;
 pub use self::context::Context;
+pub use self::gui::*;
+pub use self::userdata::*;

@@ -2,9 +2,12 @@ use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down},
     prelude::*,
-    ui::{UiCreator, UiEvent, UiEventType, UiFinder},
+    ui::{UiEvent, UiEventType, UiFinder},
     winit::VirtualKeyCode,
 };
+use log::info;
+
+use crate::resources::{UiHandles, UiType};
 
 use super::{credits::CreditsScreen, lobby::Lobby, welcome::WelcomeScreen};
 
@@ -17,6 +20,16 @@ const BUTTON_CREDITS: &str = "credits";
 pub struct MainMenu {
     ui_root: Option<Entity>,
     menu_buttons: MenuButtons,
+}
+
+impl MainMenu {
+    fn init_ui(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+        self.ui_root = UiHandles::add_ui(UiType::MainMenu, data.world);
+        // invoke a world update to finish creating our ui entities
+        data.data.update(data.world);
+        // look up our buttons
+        self.menu_buttons.load_buttons(data.world);
+    }
 }
 
 #[derive(Default, Debug)]
@@ -53,12 +66,9 @@ impl MenuButtons {
 }
 
 impl SimpleState for MainMenu {
-    fn on_start(&mut self, data: StateData<'_, GameData>) {
-        // create UI from prefab and save the reference.
-        let world = data.world;
-
-        self.ui_root =
-            Some(world.exec(|mut creator: UiCreator<'_>| creator.create("ui/menu.ron", ())));
+    fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
+        info!("MainMenuState on_start");
+        self.init_ui(&mut data);
     }
 
     fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
@@ -78,7 +88,6 @@ impl SimpleState for MainMenu {
         event: StateEvent,
     ) -> SimpleTrans {
         // let StateData { world, .. } = state_data;
-
         match event {
             StateEvent::Window(event) => {
                 if is_close_requested(&event) {
