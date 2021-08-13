@@ -39,7 +39,7 @@ impl SimpleState for LoadingState {
 
         // Create a LoadingConfig to tell us what assets to actually load.
         let mut loading_config = load_loading_config();
-        info!("Loading secceed => {:?}", loading_config);
+        info!("Loading succeed => {:?}", loading_config);
         info!("Load all ui handles.");
         // Load all UI handles.
         let ui_handles =

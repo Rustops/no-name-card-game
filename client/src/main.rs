@@ -64,6 +64,7 @@ impl Client {
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
             .with_bundle(FpsCounterBundle)?
+            .with_bundle(ChatroomBundle::new(server_info, self.name))?
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::new()
                     .with_plugin(
@@ -73,7 +74,6 @@ impl Client {
                     .with_plugin(RenderUi::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
-            .with_bundle(ChatroomBundle::new(server_info, self.name))?
             .with_system_desc(
                 DjSystemDesc::new(|music: &mut Music| music.music.next()),
                 "dj_system",

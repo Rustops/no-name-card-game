@@ -17,8 +17,8 @@ const SERVER_ADDRESS: &str = "127.0.0.1:6666";
 
 #[derive(Debug, Default)]
 pub struct ChatroomBundle {
-    server_info: ServerInfoResource,
-    client_info: String,
+    pub server_info: ServerInfoResource,
+    pub client_info: String,
 }
 
 impl ChatroomBundle {
@@ -122,7 +122,7 @@ impl<'a> System<'a> for ChatroomSystem {
                 if let Some(input) = ui_text.get_mut(event.target) {
                     // play sound_effect
                     sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
-                    let msg = input.text.clone();
+                    let msg = format!("Chat-{}", input.text.clone());
                     info!(
                         "[{}][{}] Sending message: {}",
                         time.absolute_time_seconds(),
@@ -156,7 +156,9 @@ impl<'a> System<'a> for ChatroomSystem {
                         }
                     }
                 }
-                NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
+                NetworkSimulationEvent::Connect(addr) => {
+                    info!("New client connection: {}", addr);
+                }
                 NetworkSimulationEvent::Disconnect(addr) => info!("Server Disconnected: {}", addr),
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);

@@ -1,7 +1,8 @@
 use amethyst::{
     core::Time,
-    ecs::Entity,
+    ecs::{Entity, Read, Write},
     input::{is_close_requested, is_key_down},
+    network::simulation::TransportResource,
     prelude::*,
     ui::{UiEvent, UiEventType, UiFinder, UiText},
     utils::fps_counter::FpsCounter,
@@ -12,6 +13,7 @@ use super::pause::PauseMenuState;
 use crate::{
     resources::{UiHandles, UiType},
     states::select_character::SelectState,
+    systems::chat::ChatroomBundle,
 };
 
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
@@ -36,12 +38,22 @@ impl Lobby {
         // invoke a world update to finish creating our ui entities
         data.data.update(data.world);
     }
+
+    fn init_connection(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+        data.world.exec(
+            |(mut net, chatroom_info): (Write<'_, TransportResource>, Read<'_, ChatroomBundle>)| {
+                let conn_msg = format!("Connect-{}", chatroom_info.client_info);
+                net.send(chatroom_info.server_info.get_addr(), conn_msg.as_bytes());
+            },
+        );
+    }
 }
 
 impl SimpleState for Lobby {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         // let StateData { mut world, .. } = data;
-        self.init_ui(&mut data)
+        self.init_ui(&mut data);
+        self.init_connection(&mut data);
         // needed for registering audio output.
         // init_output(&mut world);
 
