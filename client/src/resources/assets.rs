@@ -1,9 +1,9 @@
-use super::{CharacterType, audio::SoundType};
+use super::{audio::SoundType, CharacterType};
 use amethyst::{assets::Handle, audio::SourceHandle, renderer::SpriteSheet};
 use log::error;
 use rand::Rng;
-use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Default, Debug)]
 pub struct Assets {
@@ -16,7 +16,8 @@ impl Assets {
         self.characters.insert(asset_type, asset);
         self
     }
-
+    // todo: applying this
+    #[allow(dead_code)]
     pub fn get_character(&self, asset_type: CharacterType) -> Handle<SpriteSheet> {
         (*self
             .characters
@@ -63,7 +64,7 @@ pub enum AssetType {
 /// Matches a still or animated asset to its dimensions in pixels. Required to calculate the
 /// correct scale factor for the entity to make it fit within its in-world bounds.
 #[allow(clippy::match_single_binding)]
-#[must_use]
+#[allow(dead_code)]
 pub fn get_asset_dimensions(asset: &AssetType) {
     match asset {
         AssetType::Character(character_type, _) => match character_type {

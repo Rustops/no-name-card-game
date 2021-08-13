@@ -1,4 +1,4 @@
-use crate::resources::{Assets, AudioSettings, Music, UiHandles, UserCache, load_audio_settings};
+use crate::resources::{load_audio_settings, Assets, AudioSettings, Music, UiHandles, UserCache};
 use crate::utilities::files::get_user_cache_file;
 use amethyst::assets::AssetStorage;
 use amethyst::prelude::WorldExt;

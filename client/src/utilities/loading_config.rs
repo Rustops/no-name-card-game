@@ -1,4 +1,4 @@
-use crate::resources::{SoundType, UiType, CharacterType};
+use crate::resources::{CharacterType, SoundType, UiType};
 use serde::{Deserialize, Serialize};
 
 /// This specifies all assets that must be loaded by the `LoadingState`.
