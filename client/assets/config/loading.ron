@@ -10,6 +10,13 @@
         (CharacterSelection, "ui/select_character.ron"),
         (Welcome, "ui/welcome.ron"),
     ],
+    characters: [
+        (Alice, "texture/character/alice.png", "prefab/character_alice.ron"),
+        (Cirno, "texture/character/cirno.png", "prefab/character_cirno.ron"),
+        (Flandre, "texture/character/flandre.png", "prefab/character_flandre.ron"),
+        (Kanako, "texture/character/kanako.png", "prefab/character_kanako.ron"),
+        (Kokoro, "texture/character/kokoro.png", "prefab/character_kokoro.ron"),
+    ],
     sound_effects: [
         (Confirm, "audio/sound_effects/confirm.ogg"),
         (Boop, "audio/sound_effects/boop.ogg"),

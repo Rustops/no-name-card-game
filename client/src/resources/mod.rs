@@ -4,6 +4,7 @@ mod config;
 mod context;
 mod gui;
 mod userdata;
+mod character;
 
 pub use self::assets::*;
 pub use self::audio::*;
@@ -11,3 +12,4 @@ pub use self::config::*;
 pub use self::context::Context;
 pub use self::gui::*;
 pub use self::userdata::*;
+pub use self::character::*;
