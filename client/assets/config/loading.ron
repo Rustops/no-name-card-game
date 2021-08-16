@@ -9,6 +9,7 @@
         (PauseMenu, "ui/pause_menu.ron"),
         (CharacterSelection, "ui/select_character.ron"),
         (Welcome, "ui/welcome.ron"),
+        (Login, "ui/login.ron"),
     ],
     characters: [
         (Alice, "texture/character/alice.png", "prefab/character_alice.ron"),

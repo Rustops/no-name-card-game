@@ -21,7 +21,10 @@ mod states;
 mod systems;
 mod utilities;
 
-use systems::{chat::ServerInfoResource, play_sfx::PlaySfxSystem};
+use systems::{
+    chat::{ClientInfoResource, ServerInfoResource},
+    play_sfx::PlaySfxSystem,
+};
 use utilities::{
     files::{get_assets_dir, get_config_dir},
     startup::start_game,
@@ -53,7 +56,7 @@ impl Client {
     }
     pub fn run(self) -> Result<()> {
         let server_info = ServerInfoResource { addr: self.url };
-
+        let client_info = ClientInfoResource { name: self.name };
         amethyst::start_logger(Default::default());
 
         let display_config_path = get_config_dir().join("display.ron");
@@ -64,7 +67,7 @@ impl Client {
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
             .with_bundle(FpsCounterBundle)?
-            .with_bundle(ChatroomBundle::new(server_info, self.name))?
+            .with_bundle(ChatroomBundle::new(server_info, client_info))?
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::new()
                     .with_plugin(

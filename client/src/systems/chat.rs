@@ -18,11 +18,11 @@ const SERVER_ADDRESS: &str = "127.0.0.1:6666";
 #[derive(Debug, Default)]
 pub struct ChatroomBundle {
     pub server_info: ServerInfoResource,
-    pub client_info: String,
+    pub client_info: ClientInfoResource,
 }
 
 impl ChatroomBundle {
-    pub fn new(server_info: ServerInfoResource, client_info: String) -> Self {
+    pub fn new(server_info: ServerInfoResource, client_info: ClientInfoResource) -> Self {
         Self {
             server_info,
             client_info,
@@ -38,6 +38,7 @@ impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
             &[],
         );
         world.insert(ServerInfoResource::new(self.server_info.addr));
+        world.insert(ClientInfoResource::new(self.client_info.name));
         Ok(())
     }
 }
@@ -122,11 +123,15 @@ impl<'a> System<'a> for ChatroomSystem {
                 if let Some(input) = ui_text.get_mut(event.target) {
                     // play sound_effect
                     sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
-                    let msg = format!("Chat-{}", input.text.clone());
+                    let msg = format!(
+                        "{}-Chat-{}",
+                        chatroom_info.client_info.name,
+                        input.text.clone()
+                    );
                     info!(
                         "[{}][{}] Sending message: {}",
                         time.absolute_time_seconds(),
-                        chatroom_info.client_info,
+                        chatroom_info.client_info.name,
                         &msg
                     );
                     net.send(chatroom_info.server_info.get_addr(), msg.as_bytes());
@@ -192,5 +197,16 @@ impl Default for ServerInfoResource {
         Self {
             addr: SERVER_ADDRESS.parse().unwrap(),
         }
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct ClientInfoResource {
+    pub name: String,
+}
+
+impl ClientInfoResource {
+    pub fn new(name: String) -> Self {
+        Self { name }
     }
 }

@@ -7,9 +7,12 @@ use amethyst::{
 };
 use log::info;
 
-use crate::resources::{UiHandles, UiType};
+use crate::{
+    resources::{UiHandles, UiType},
+    states::login::Login,
+};
 
-use super::{credits::CreditsScreen, lobby::Lobby, welcome::WelcomeScreen};
+use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 
 const BUTTON_START: &str = "start";
 const BUTTON_LOAD: &str = "load";
@@ -110,7 +113,7 @@ impl SimpleState for MainMenu {
                 }
                 if Some(target) == self.menu_buttons.button_start {
                     log::info!("[Trans::Switch] Switching to Lobby!");
-                    return Trans::Switch(Box::new(Lobby::default()));
+                    return Trans::Switch(Box::new(Login::default()));
                 }
                 if Some(target) == self.menu_buttons.button_load
                     || Some(target) == self.menu_buttons.button_options
