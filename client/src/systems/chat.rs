@@ -14,6 +14,7 @@ use crate::resources::SoundType;
 use super::play_sfx::SoundEvent;
 
 const SERVER_ADDRESS: &str = "127.0.0.1:6666";
+const CLIENT_NAME: &str = "test";
 
 #[derive(Debug, Default)]
 pub struct ChatroomBundle {
@@ -200,7 +201,7 @@ impl Default for ServerInfoResource {
     }
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct ClientInfoResource {
     pub name: String,
 }
@@ -208,5 +209,13 @@ pub struct ClientInfoResource {
 impl ClientInfoResource {
     pub fn new(name: String) -> Self {
         Self { name }
+    }
+}
+
+impl Default for ClientInfoResource {
+    fn default() -> Self {
+        Self {
+            name: CLIENT_NAME.to_string(),
+        }
     }
 }

@@ -1,6 +1,7 @@
 use amethyst::{
-    ecs::Entity,
+    ecs::{Entity, Read, Write},
     input::{is_close_requested, is_key_down},
+    network::simulation::TransportResource,
     prelude::*,
     ui::{UiEvent, UiEventType, UiFinder},
     winit::VirtualKeyCode,
@@ -9,7 +10,8 @@ use log::info;
 
 use crate::{
     resources::{UiHandles, UiType},
-    states::login::Login,
+    states::lobby::Lobby,
+    systems::chat::ChatroomBundle,
 };
 
 use super::{credits::CreditsScreen, welcome::WelcomeScreen};
@@ -32,6 +34,20 @@ impl MainMenu {
         data.data.update(data.world);
         // look up our buttons
         self.menu_buttons.load_buttons(data.world);
+    }
+
+    /// The player should connect to the server when he enters the lobby, and
+    /// here the player should send his information to the server to facilitate
+    /// the server loading the players in the lobby.
+    fn init_connection(&mut self, data: StateData<'_, GameData<'_, '_>>) {
+        data.world.exec(
+            |(mut net, chatroom_info): (Write<'_, TransportResource>, Read<'_, ChatroomBundle>)| {
+                log::info!("chatroom_info: server {:?}", chatroom_info.server_info);
+                log::info!("chatroom_info: client {:?}", chatroom_info.client_info);
+                let conn_msg = format!("{}-Connect", chatroom_info.client_info.name);
+                net.send(chatroom_info.server_info.get_addr(), conn_msg.as_bytes());
+            },
+        );
     }
 }
 
@@ -87,7 +103,7 @@ impl SimpleState for MainMenu {
 
     fn handle_event(
         &mut self,
-        _state_data: StateData<'_, GameData>,
+        state_data: StateData<'_, GameData>,
         event: StateEvent,
     ) -> SimpleTrans {
         // let StateData { world, .. } = state_data;
@@ -113,7 +129,8 @@ impl SimpleState for MainMenu {
                 }
                 if Some(target) == self.menu_buttons.button_start {
                     log::info!("[Trans::Switch] Switching to Lobby!");
-                    return Trans::Switch(Box::new(Login::default()));
+                    self.init_connection(state_data);
+                    return Trans::Switch(Box::new(Lobby::default()));
                 }
                 if Some(target) == self.menu_buttons.button_load
                     || Some(target) == self.menu_buttons.button_options
