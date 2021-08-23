@@ -30,6 +30,75 @@ Container(
                 press_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
             )
         ),
+        // Player Lobby
+        Container(
+            transform: (
+                id: "player_lobby_container",
+                x: -100.,
+                y: 0.,
+                width: 1000.,
+                height: 700.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            background: Texture(File("texture/bg_chatbox.png", ("IMAGE", ()))),
+            children: [
+                // Show lobby_label
+                Label(
+                    transform: (
+                        id: "lobby_label",
+                        x: 0.,
+                        y: 325,
+                        width: 200.,
+                        height: 50.,
+                        tab_order: 0,
+                        anchor: Middle,
+                        opaque: false,
+                    ),
+                    text: (
+                        text: "当前位置：游戏大厅",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 25.,
+                        color: (0.498, 0.254, 0.937, 1.0),
+                    )
+                ),
+                // Show lobby_escape
+                Label(
+                    transform: (
+                        id: "lobby_escape",
+                        x: 0.,
+                        y: -325,
+                        width: 200.,
+                        height: 50.,
+                        tab_order: 0,
+                        anchor: Middle,
+                        opaque: false,
+                    ),
+                    text: (
+                        text: "按`ESC`键返回主菜单",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 25.,
+                        color: (0.498, 0.254, 0.937, 1.0),
+                    )
+                ),
+                Container(
+                    transform: (
+                        id: "player_lobby_container",
+                        x: 0.,
+                        y: 0.,
+                        width: 900.,
+                        height: 600.,
+                        tab_order: 0,
+                        anchor: Middle,
+                    ),
+                    background: SolidColor(0.64, 0.6, 0.6, 1.0),
+                    children: [
+                    
+                    ],
+                ),
+            ]
+        ),
+
         // Chatbox input
         Container(
             transform: (
