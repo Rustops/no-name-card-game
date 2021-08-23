@@ -1,5 +1,5 @@
 use amethyst::{
-    ecs::{Entity, Read, Write},
+    ecs::Entity,
     input::{is_close_requested, is_key_down},
     network::simulation::TransportResource,
     prelude::*,
@@ -11,7 +11,7 @@ use log::info;
 use crate::{
     resources::{UiHandles, UiType},
     states::lobby::Lobby,
-    systems::chat::ChatroomBundle,
+    systems::chat::{ClientInfoResource, ServerInfoResource},
 };
 
 use super::{credits::CreditsScreen, welcome::WelcomeScreen};
@@ -40,14 +40,13 @@ impl MainMenu {
     /// here the player should send his information to the server to facilitate
     /// the server loading the players in the lobby.
     fn init_connection(&mut self, data: StateData<'_, GameData<'_, '_>>) {
-        data.world.exec(
-            |(mut net, chatroom_info): (Write<'_, TransportResource>, Read<'_, ChatroomBundle>)| {
-                log::info!("chatroom_info: server {:?}", chatroom_info.server_info);
-                log::info!("chatroom_info: client {:?}", chatroom_info.client_info);
-                let conn_msg = format!("{}-Connect", chatroom_info.client_info.name);
-                net.send(chatroom_info.server_info.get_addr(), conn_msg.as_bytes());
-            },
-        );
+        let world = data.world;
+        let client = world.fetch::<ClientInfoResource>();
+        let server = world.fetch::<ServerInfoResource>();
+        let mut net = world.fetch_mut::<TransportResource>();
+        let conn_msg = format!("{}-Connect-Request", client.name);
+
+        net.send(server.get_addr(), conn_msg.as_bytes());
     }
 }
 

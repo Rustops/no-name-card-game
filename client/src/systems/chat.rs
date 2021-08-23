@@ -33,13 +33,9 @@ impl ChatroomBundle {
 
 impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        builder.add(
-            ChatroomSystemDesc::default().build(world),
-            "spam_system",
-            &[],
-        );
         world.insert(ServerInfoResource::new(self.server_info.addr));
         world.insert(ClientInfoResource::new(self.client_info.name));
+        builder.add(ChatroomSystemDesc.build(world), "chat_system", &[]);
         Ok(())
     }
 }

@@ -10,5 +10,5 @@ if [ -z "$1" ] && [ -z "$2" ]  ;then
     ./client/no-name-card-game
 else
     echo "Username: [$1] - Server: [$2]"
-    ./client/no-name-card-game --name "$0" --url "$1"
+    ./client/no-name-card-game --name "$1" --url "$2"
 fi
