@@ -78,6 +78,9 @@ impl<'a> System<'a> for ChatReceiveSystem {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("{}: {:?}", addr, payload);
+
+                    
+
                     // In a typical client/server simulation, both the client and the server will
                     // be exchanging messages at a constant rate. Laminar makes use of this by
                     // packaging message acks with the next sent message. Therefore, in order for

@@ -11,7 +11,7 @@ Container(
         // Background
         Image(
             transform: (
-                id: "background",
+                id: "game_background",
                 width: 1280.,
                 height: 720.,
                 tab_order: 1,
@@ -22,7 +22,7 @@ Container(
         // Chatbox input
         Container(
             transform: (
-                id: "editable_container",
+                id: "game_editable_container",
                 x: -120.0,
                 y: 20.0,
                 width: 200.,
@@ -62,7 +62,7 @@ Container(
         // Chatbox output
         Container(
             transform: (
-                id: "multiline_container",
+                id: "game_multiline_container",
                 x: -120.,
                 y: 140.,
                 width: 200.,
@@ -73,7 +73,7 @@ Container(
             children: [
                 Image(
                     transform: (
-                        id: "background",
+                        id: "game_multiline_background",
                         x: -100.,
                         y: 100.,
                         width: 200.,
@@ -84,7 +84,7 @@ Container(
                 ),
                 Label(
                     transform: (
-                        id: "multiline",
+                        id: "game_multiline",
                         x: -100.,
                         y: 100.,
                         width: 200.,
@@ -105,7 +105,7 @@ Container(
         // Show fps
         Label(
             transform: (
-                id: "fps",
+                id: "game_fps",
                 x: 100.,
                 y: -16,
                 width: 200.,

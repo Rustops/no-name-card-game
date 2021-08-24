@@ -27,6 +27,7 @@ impl Default for PlayerRole {
 #[derive(Component)]
 #[storage(DenseVecStorage)]
 pub struct Player {
+    pub name: String,
     pub state: PlayerState,
     pub is_playing: bool,
     pub role: PlayerRole,
@@ -34,11 +35,12 @@ pub struct Player {
 
 impl Player {
     #[allow(dead_code)]
-    pub fn new() -> Self {
+    pub fn new(name: String, state: PlayerState, is_playing: bool, role: PlayerRole) -> Self {
         Player {
-            state: PlayerState::Chatting,
-            is_playing: false,
-            role: PlayerRole::Flandre,
+            name,
+            state,
+            is_playing,
+            role,
         }
     }
 }
