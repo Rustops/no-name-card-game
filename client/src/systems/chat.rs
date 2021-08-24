@@ -148,7 +148,7 @@ impl<'a> System<'a> for ChatroomSystem {
 
                     let p = payload.clone().to_vec();
                     let s = String::from_utf8(p).unwrap();
-                    let ss: Vec<&str> = s.split("-").collect();
+                    let ss: Vec<&str> = s.split('-').collect();
 
                     if ss[1] == "Chat" {
                         log::info!("[Chat] Update chatbox output");
