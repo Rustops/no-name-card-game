@@ -1,7 +1,12 @@
 use amethyst::{
+    assets::Handle,
     core::{bundle::SystemBundle, SystemDesc, Time},
-    ecs::{DispatcherBuilder, Entity, Read, System, SystemData, World, Write, WriteStorage},
+    ecs::{
+        DispatcherBuilder, Entity, LazyUpdate, Read, System, SystemData, World, Write, WriteStorage,
+    },
     network::simulation::{NetworkSimulationEvent, NetworkSimulationTime, TransportResource},
+    prelude::WorldExt,
+    renderer::SpriteSheet,
     shrev::{EventChannel, ReaderId},
     ui::{UiEvent, UiEventType, UiFinder, UiText},
     Result,
@@ -9,7 +14,7 @@ use amethyst::{
 use log::{error, info};
 use std::net::SocketAddr;
 
-use crate::resources::SoundType;
+use crate::{components::Player, resources::SoundType};
 
 use super::play_sfx::SoundEvent;
 
@@ -102,6 +107,7 @@ impl<'a> System<'a> for ChatroomSystem {
         Read<'a, EventChannel<NetworkSimulationEvent>>,
         WriteStorage<'a, UiText>,
         Write<'a, EventChannel<SoundEvent>>,
+        Read<'a, LazyUpdate>,
     );
 
     fn run(
@@ -115,6 +121,7 @@ impl<'a> System<'a> for ChatroomSystem {
             event,
             mut ui_text,
             mut sound_channel,
+            _lazy,
         ): Self::SystemData,
     ) {
         ui_event
@@ -163,6 +170,12 @@ impl<'a> System<'a> for ChatroomSystem {
                             }
                         }
                     }
+                    if ss[1] == "Connect" {
+                        // TODO: create player entity
+                        // lazy.exec_mut(move |world| {
+                        //     load_player(world);
+                        // });
+                    }
                 }
                 NetworkSimulationEvent::Connect(addr) => {
                     info!("New client connection: {}", addr);
@@ -177,6 +190,12 @@ impl<'a> System<'a> for ChatroomSystem {
                 _ => {}
             }
         }
+    }
+
+    fn setup(&mut self, world: &mut World) {
+        world.register::<Player>();
+        world.register::<Handle<SpriteSheet>>();
+        <Self as System<'_>>::SystemData::setup(world);
     }
 }
 

@@ -10,6 +10,7 @@ use amethyst::{
 
 use super::pause::PauseMenuState;
 use crate::{
+    // entities::player::load_player,
     resources::{UiHandles, UiType},
     states::select_character::SelectState,
 };
@@ -41,12 +42,12 @@ impl Lobby {
 impl SimpleState for Lobby {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         // let StateData { mut world, .. } = data;
+        // load_player(data.world);
         self.init_ui(&mut data);
         // needed for registering audio output.
         // init_output(&mut world);
 
         // initialize_audio(world);
-        // load_player(world)
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {

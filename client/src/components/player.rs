@@ -1,6 +1,8 @@
 use amethyst::ecs::{Component, DenseVecStorage};
 
-#[derive(Debug)]
+use crate::resources::CharacterType;
+
+#[derive(Debug, Clone)]
 pub enum PlayerState {
     // The game has not startedm, players are chatting
     Chatting,
@@ -12,30 +14,18 @@ impl Default for PlayerState {
     }
 }
 
-#[derive(Debug)]
-
-pub enum PlayerRole {
-    Flandre,
-}
-
-impl Default for PlayerRole {
-    fn default() -> Self {
-        Self::Flandre
-    }
-}
-
-#[derive(Component)]
+#[derive(Component, Clone, Default)]
 #[storage(DenseVecStorage)]
 pub struct Player {
     pub name: String,
     pub state: PlayerState,
     pub is_playing: bool,
-    pub role: PlayerRole,
+    pub role: CharacterType,
 }
 
 impl Player {
     #[allow(dead_code)]
-    pub fn new(name: String, state: PlayerState, is_playing: bool, role: PlayerRole) -> Self {
+    pub fn new(name: String, state: PlayerState, is_playing: bool, role: CharacterType) -> Self {
         Player {
             name,
             state,

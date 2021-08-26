@@ -1,27 +1,42 @@
-use amethyst::{ecs::prelude::World, ui::UiCreator};
+use amethyst::{
+    core::{math::Vector3, Transform},
+    ecs::prelude::World,
+    prelude::{Builder, WorldExt},
+    renderer::SpriteRender,
+};
 
 use crate::{
-    components::{Player, PlayerRole, PlayerState},
+    components::{Player, PlayerState},
+    resources::{Assets, CharacterType},
     systems::chat::ClientInfoResource,
 };
 
 pub fn _load_player(world: &mut World) {
-    let client = world.fetch::<ClientInfoResource>();
-    let _player = Player::new(
-        client.name.clone(),
+    let client_name = {
+        let client = world.fetch::<ClientInfoResource>();
+        client.name.clone()
+    };
+
+    let character = {
+        let assets = world.fetch::<Assets>();
+        assets.get_character(CharacterType::Alice)
+    };
+    log::info!("[Load::Player] Name: {}, CharacterType: Alice", client_name);
+    let player = Player::new(
+        client_name,
         PlayerState::Chatting,
         false,
-        PlayerRole::default(),
+        CharacterType::Alice,
     );
-
-    // _load_player_role(world, player);
-    log::info!("[Load::Player] Name: Default_Flandre, Role: Default");
-    // world.
-}
-
-pub fn _load_player_role(world: &mut World, player: Player) {
-    let img_path = match player.role {
-        PlayerRole::Flandre => "ui/default_player.ron",
+    let render = SpriteRender {
+        sprite_sheet: character,
+        sprite_number: 1,
     };
-    world.exec(|mut creator: UiCreator<'_>| creator.create(img_path, ()));
+    let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
+    world
+        .create_entity()
+        .with(player)
+        .with(render)
+        .with(transform)
+        .build();
 }
