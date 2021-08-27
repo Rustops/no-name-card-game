@@ -1,5 +1,11 @@
-use super::{audio::SoundType, CharacterType};
-use amethyst::{assets::Handle, audio::SourceHandle, renderer::SpriteSheet};
+use crate::{common::Pos, resources::Avatar};
+
+use super::{audio::SoundType, CharacterType, SpriteType};
+use amethyst::{
+    assets::Handle,
+    audio::SourceHandle,
+    renderer::{SpriteSheet, Texture},
+};
 use log::error;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -8,23 +14,40 @@ use std::collections::HashMap;
 #[derive(Default, Debug)]
 pub struct Assets {
     sounds: HashMap<SoundType, Vec<SourceHandle>>,
-    characters: HashMap<CharacterType, Handle<SpriteSheet>>,
+    characters: HashMap<CharacterType, Handle<Texture>>,
+    stills: HashMap<SpriteType, Handle<SpriteSheet>>,
 }
 
 impl Assets {
-    pub fn put_character(mut self, asset_type: CharacterType, asset: Handle<SpriteSheet>) -> Self {
+    pub fn put_character(mut self, asset_type: CharacterType, asset: Handle<Texture>) -> Self {
         self.characters.insert(asset_type, asset);
         self
     }
-    // todo: applying this
     #[allow(dead_code)]
-    pub fn get_character(&self, asset_type: CharacterType) -> Handle<SpriteSheet> {
+    pub fn get_character(&self, asset_type: CharacterType) -> Handle<Texture> {
         (*self
             .characters
             .get(&asset_type)
             .or_else(|| {
                 error!("Spritesheet asset {:?} is missing!", asset_type);
                 self.characters.get(&CharacterType::NotFound)
+            })
+            .expect("Fallback asset also missing."))
+        .clone()
+    }
+
+    pub fn put_still(mut self, asset_type: SpriteType, asset: Handle<SpriteSheet>) -> Self {
+        self.stills.insert(asset_type, asset);
+        self
+    }
+
+    pub fn get_still(&self, asset_type: SpriteType) -> Handle<SpriteSheet> {
+        (*self
+            .stills
+            .get(&asset_type)
+            .or_else(|| {
+                error!("Spritesheet asset {:?} is missing!", asset_type);
+                self.stills.get(&SpriteType::NotFound)
             })
             .expect("Fallback asset also missing."))
         .clone()
@@ -57,20 +80,24 @@ impl Assets {
 pub enum AssetType {
     /// A static, non-animated image.
     /// Contains both a handle to the sprite sheet and the number of the sprite on the sheet.
+    Still(SpriteType, usize),
     Character(CharacterType, usize),
     // Animated(AnimType),
 }
 
 /// Matches a still or animated asset to its dimensions in pixels. Required to calculate the
 /// correct scale factor for the entity to make it fit within its in-world bounds.
-#[allow(clippy::match_single_binding)]
-#[allow(dead_code)]
-pub fn get_asset_dimensions(asset: &AssetType) {
+pub fn get_asset_dimensions(asset: &AssetType) -> Pos {
     match asset {
         AssetType::Character(character_type, _) => match character_type {
-            CharacterType::Alice => todo!(),
+            CharacterType::Alice => Pos::new(50, 50),
             CharacterType::Cirno => todo!(),
             _ => todo!(),
+        },
+        AssetType::Still(sprite_type, _) => match sprite_type {
+            SpriteType::Avatar(Avatar::Default) => Pos::new(50, 50),
+            SpriteType::Avatar(_) => Pos::new(50, 50),
+            _ => Pos::new(128, 128),
         },
     }
 }

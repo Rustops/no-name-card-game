@@ -4,7 +4,7 @@ use crate::resources::CharacterType;
 
 #[derive(Debug, Clone)]
 pub enum PlayerState {
-    // The game has not startedm, players are chatting
+    // The game has not started, players are chatting
     Chatting,
 }
 
@@ -14,7 +14,7 @@ impl Default for PlayerState {
     }
 }
 
-#[derive(Component, Clone, Default)]
+#[derive(Debug, Component, Clone, Default)]
 #[storage(DenseVecStorage)]
 pub struct Player {
     pub name: String,

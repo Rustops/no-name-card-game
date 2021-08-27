@@ -10,7 +10,8 @@ use amethyst::{
 
 use super::pause::PauseMenuState;
 use crate::{
-    // entities::player::load_player,
+    common::camera::*,
+    entities::player::load_player,
     resources::{UiHandles, UiType},
     states::select_character::SelectState,
 };
@@ -25,6 +26,9 @@ pub struct Lobby {
     paused: bool,
     // The UI root entity. Deleting this should remove the complete UI
     ui_root: Option<Entity>,
+    // THe player entity
+    // player: Option<Entity>,
+    // peers: Vec<Option<Entity>>,
     // A reference to the FPS display, which we want to interact with
     fps_display: Option<Entity>,
     // A button to start game
@@ -37,16 +41,22 @@ impl Lobby {
         // invoke a world update to finish creating our ui entities
         data.data.update(data.world);
     }
+    fn init_avatar(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+        load_player(data.world);
+    }
 }
 
 impl SimpleState for Lobby {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         // let StateData { mut world, .. } = data;
-        // load_player(data.world);
         self.init_ui(&mut data);
+        self.init_avatar(&mut data);
+        load_player(data.world);
+
+        initialise_camera(&mut data.world);
+        // load_player(data.world);
         // needed for registering audio output.
         // init_output(&mut world);
-
         // initialize_audio(world);
     }
 

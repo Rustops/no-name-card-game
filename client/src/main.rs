@@ -14,6 +14,7 @@ use amethyst::{
 use states::loading::LoadingState;
 use structopt::StructOpt;
 
+mod common;
 mod components;
 mod entities;
 mod resources;
@@ -54,6 +55,7 @@ impl Client {
     pub fn init() -> Self {
         Client::from_args()
     }
+
     pub fn run(self) -> Result<()> {
         let server_info = ServerInfoResource { addr: self.url };
         let client_info = ClientInfoResource { name: self.name };
@@ -75,6 +77,7 @@ impl Client {
                             .with_clear([0.0, 0.0, 0.0, 1.0]),
                     )
                     .with_plugin(RenderUi::default()),
+                // .with_plugin(RenderFlat2D::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
             .with_system_desc(
