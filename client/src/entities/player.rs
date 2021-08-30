@@ -1,6 +1,7 @@
 use amethyst::{
     ecs::prelude::World,
     prelude::{Builder, WorldExt},
+    ui::{Anchor, UiImage, UiTransform},
 };
 
 use crate::{
@@ -24,7 +25,7 @@ pub fn load_player(world: &mut World) {
     log::info!("[Load::Avater] {:?}", avater);
 
     let player = Player::new(
-        client_name,
+        client_name.clone(),
         PlayerState::Chatting,
         false,
         CharacterType::Alice,
@@ -38,11 +39,24 @@ pub fn load_player(world: &mut World) {
         &AssetType::Character(CharacterType::Alice, 3),
     );
     log::info!("[Load::Transform] {:?}", transform);
-    
+
+    let ui_image = UiImage::Texture(avater);
+    let ui_transfrom = UiTransform::new(
+        format!("avater_{}", client_name),
+        Anchor::Middle,
+        Anchor::Middle,
+        0.,
+        32.,
+        200.,
+        145.,
+        98.,
+    );
+    log::info!("[Load::UiTransform] {:?}", ui_transfrom);
+
     world
         .create_entity()
         .with(player)
-        .with(transform)
-        .with(avater)
+        .with(ui_image)
+        .with(ui_transfrom)
         .build();
 }
