@@ -13,12 +13,12 @@
     // Load the player avatar in lobby, the size of the image is fixed，
     // Note: avatars are different from characters
     avatars: [
-        (Default, "texture/avatar/default.png", "prefab/character_alice.ron"),
-        (Alice, "texture/avatar/alice.png", "prefab/character_alice.ron"),
-        (Cirno, "texture/avatar/cirno.png", "prefab/character_cirno.ron"),
-        (Flandre, "texture/avatar/flandre.png", "prefab/character_flandre.ron"),
-        (Kanako, "texture/avatar/kanako.png", "prefab/character_kanako.ron"),
-        (Kokoro, "texture/avatar/kokoro.png", "prefab/character_kokoro.ron"),
+        (Default, "texture/avatar/default.png"),
+        (Alice, "texture/avatar/alice.png"),
+        (Cirno, "texture/avatar/cirno.png"),
+        (Flandre, "texture/avatar/flandre.png"),
+        (Kanako, "texture/avatar/kanako.png"),
+        (Kokoro, "texture/avatar/kokoro.png"),
     ],
     // Handle<Texture>
     characters: [

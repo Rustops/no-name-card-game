@@ -2,7 +2,7 @@ use crate::resources::{load_audio_settings, Assets, AudioSettings, Music, UiHand
 use crate::utilities::files::get_user_cache_file;
 use amethyst::assets::AssetStorage;
 use amethyst::prelude::WorldExt;
-use amethyst::renderer::{ImageFormat, SpriteSheet, SpriteSheetFormat, Texture};
+use amethyst::renderer::{ImageFormat, Texture};
 use amethyst::ui::UiCreator;
 use amethyst::ui::UiLoader;
 use log::error;
@@ -72,27 +72,20 @@ impl SimpleState for LoadingState {
             },
         );
         // Load all sprite sheets for still images and add them to an Assets instance.
-        let assets = loading_config.avatars.drain(..).fold(
-            assets,
-            |assets, (avatar_type, texture_path, spritesheet_path)| {
-                let loader = data.world.read_resource::<Loader>();
-                let texture_handle = loader.load(
-                    texture_path,
-                    ImageFormat::default(),
-                    &mut self.progress,
-                    &data.world.read_resource::<AssetStorage<Texture>>(),
-                );
-                assets.put_avatar(
-                    avatar_type,
-                    loader.load(
-                        spritesheet_path,
-                        SpriteSheetFormat(texture_handle),
+        let assets =
+            loading_config
+                .avatars
+                .drain(..)
+                .fold(assets, |assets, (avatar_type, texture_path)| {
+                    let loader = data.world.read_resource::<Loader>();
+                    let texture_handle = loader.load(
+                        texture_path,
+                        ImageFormat::default(),
                         &mut self.progress,
-                        &data.world.read_resource::<AssetStorage<SpriteSheet>>(),
-                    ),
-                )
-            },
-        );
+                        &data.world.read_resource::<AssetStorage<Texture>>(),
+                    );
+                    assets.put_avatar(avatar_type, texture_handle)
+                });
         // Take the Assets instance we previously filled with stills and animations and
         // add sound effects.
         let assets = loading_config.sound_effects.drain(..).fold(

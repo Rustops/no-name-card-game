@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 pub struct LoadingConfig {
     pub uis: Vec<(UiType, String)>,
     pub characters: Vec<(CharacterType, String)>,
-    pub avatars: Vec<(Avatar, String, String)>,
+    pub avatars: Vec<(Avatar, String)>,
     pub sound_effects: Vec<(SoundType, String)>,
     pub music_tracks: Vec<String>,
 }

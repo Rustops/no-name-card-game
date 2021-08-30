@@ -1,11 +1,7 @@
 use crate::{common::Pos, resources::Avatar};
 
 use super::{audio::SoundType, CharacterType};
-use amethyst::{
-    assets::Handle,
-    audio::SourceHandle,
-    renderer::{SpriteSheet, Texture},
-};
+use amethyst::{assets::Handle, audio::SourceHandle, renderer::Texture};
 use log::error;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -15,7 +11,7 @@ use std::collections::HashMap;
 pub struct Assets {
     sounds: HashMap<SoundType, Vec<SourceHandle>>,
     characters: HashMap<CharacterType, Handle<Texture>>,
-    avatars: HashMap<Avatar, Handle<SpriteSheet>>,
+    avatars: HashMap<Avatar, Handle<Texture>>,
 }
 
 impl Assets {
@@ -36,12 +32,12 @@ impl Assets {
         .clone()
     }
 
-    pub fn put_avatar(mut self, asset_type: Avatar, asset: Handle<SpriteSheet>) -> Self {
+    pub fn put_avatar(mut self, asset_type: Avatar, asset: Handle<Texture>) -> Self {
         self.avatars.insert(asset_type, asset);
         self
     }
 
-    pub fn get_avatar(&self, asset_type: Avatar) -> Handle<SpriteSheet> {
+    pub fn get_avatar(&self, asset_type: Avatar) -> Handle<Texture> {
         (*self
             .avatars
             .get(&asset_type)

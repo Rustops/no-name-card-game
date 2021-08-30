@@ -1,15 +1,10 @@
 use amethyst::{
-    core::Transform,
     ecs::prelude::World,
     prelude::{Builder, WorldExt},
-    renderer::SpriteRender,
 };
 
 use crate::{
-    common::{
-        camera::{ARENA_HEIGHT, ARENA_WIDTH},
-        DepthLayer, Pos,
-    },
+    common::{DepthLayer, Pos},
     components::{Player, PlayerState},
     resources::{AssetType, Assets, Avatar, CharacterType},
     systems::chat::ClientInfoResource,
@@ -22,11 +17,11 @@ pub fn load_player(world: &mut World) {
         client.name.clone()
     };
 
-    let character = {
+    let avater = {
         let assets = world.read_resource::<Assets>();
         assets.get_avatar(Avatar::Default)
     };
-    log::info!("[Load::Character] {:?}", character);
+    log::info!("[Load::Avater] {:?}", avater);
 
     let player = Player::new(
         client_name,
@@ -36,27 +31,18 @@ pub fn load_player(world: &mut World) {
     );
     log::info!("[Load::Player] {:?}", player);
 
-    let render = SpriteRender {
-        sprite_sheet: character,
-        sprite_number: 1,
-    };
-    log::info!("[Load::Render] {:?}", render);
-
-    // let transform = Transform::from(Vector3::new(100.0, 200.0, 300.0));
-    let _transform = load_transform(
+    let transform = load_transform(
         Pos::new(0, 0),
         DepthLayer::UiElements,
         Pos::new(1, 1),
         &AssetType::Character(CharacterType::Alice, 3),
     );
-    let mut transform = Transform::default();
-    transform.set_translation_xyz(ARENA_WIDTH * 0.5, ARENA_HEIGHT * 0.5, 0.0);
     log::info!("[Load::Transform] {:?}", transform);
-
+    
     world
         .create_entity()
         .with(player)
         .with(transform)
-        .with(render)
+        .with(avater)
         .build();
 }
