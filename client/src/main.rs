@@ -6,7 +6,10 @@ use amethyst::{
     input::{InputBundle, StringBindings},
     network::simulation::tcp::TcpNetworkBundle,
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, types::DefaultBackend, RenderDebugLines, RenderFlat2D,
+        RenderingBundle,
+    },
     ui::{RenderUi, UiBundle},
     utils::fps_counter::FpsCounterBundle,
     Result,
@@ -76,8 +79,9 @@ impl Client {
                         RenderToWindow::from_config_path(display_config_path)?
                             .with_clear([0.0, 0.0, 0.0, 1.0]),
                     )
-                    .with_plugin(RenderUi::default()),
-                // .with_plugin(RenderFlat2D::default()),
+                    .with_plugin(RenderFlat2D::default())
+                    .with_plugin(RenderUi::default())
+                    .with_plugin(RenderDebugLines::default()), // .with_plugin(RenderFlat2D::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
             .with_system_desc(

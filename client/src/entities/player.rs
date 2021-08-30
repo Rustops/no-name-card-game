@@ -11,7 +11,7 @@ use crate::{
         DepthLayer, Pos,
     },
     components::{Player, PlayerState},
-    resources::{AssetType, Assets, Avatar, CharacterType, SpriteType},
+    resources::{AssetType, Assets, Avatar, CharacterType},
     systems::chat::ClientInfoResource,
     utilities::load::load_transform,
 };
@@ -24,7 +24,7 @@ pub fn load_player(world: &mut World) {
 
     let character = {
         let assets = world.read_resource::<Assets>();
-        assets.get_still(SpriteType::Avatar(Avatar::Default))
+        assets.get_avatar(Avatar::Default)
     };
     log::info!("[Load::Character] {:?}", character);
 

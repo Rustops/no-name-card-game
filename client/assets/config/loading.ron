@@ -10,17 +10,23 @@
         (CharacterSelection, "ui/select_character.ron"),
         (Welcome, "ui/welcome.ron"),
     ],
-    stills: [
-        // Load the player avatar in lobby, the size of the image is fixed，
-        // Note: avatars are different from characters
-
+    // Load the player avatar in lobby, the size of the image is fixed，
+    // Note: avatars are different from characters
+    avatars: [
+        (Default, "texture/avatar/default.png", "prefab/character_alice.ron"),
+        (Alice, "texture/avatar/alice.png", "prefab/character_alice.ron"),
+        (Cirno, "texture/avatar/cirno.png", "prefab/character_cirno.ron"),
+        (Flandre, "texture/avatar/flandre.png", "prefab/character_flandre.ron"),
+        (Kanako, "texture/avatar/kanako.png", "prefab/character_kanako.ron"),
+        (Kokoro, "texture/avatar/kokoro.png", "prefab/character_kokoro.ron"),
     ],
+    // Handle<Texture>
     characters: [
-        (Alice, "texture/character/alice.png", "prefab/character_alice.ron"),
-        (Cirno, "texture/character/cirno.png", "prefab/character_cirno.ron"),
-        (Flandre, "texture/character/flandre.png", "prefab/character_flandre.ron"),
-        (Kanako, "texture/character/kanako.png", "prefab/character_kanako.ron"),
-        (Kokoro, "texture/character/kokoro.png", "prefab/character_kokoro.ron"),
+        (Alice, "texture/character/alice.png"),
+        (Cirno, "texture/character/cirno.png"),
+        (Flandre, "texture/character/flandre.png"),
+        (Kanako, "texture/character/kanako.png"),
+        (Kokoro, "texture/character/kokoro.png"),
     ],
     sound_effects: [
         (Confirm, "audio/sound_effects/confirm.ogg"),

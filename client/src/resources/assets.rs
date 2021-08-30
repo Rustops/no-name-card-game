@@ -1,6 +1,6 @@
 use crate::{common::Pos, resources::Avatar};
 
-use super::{audio::SoundType, CharacterType, SpriteType};
+use super::{audio::SoundType, CharacterType};
 use amethyst::{
     assets::Handle,
     audio::SourceHandle,
@@ -15,7 +15,7 @@ use std::collections::HashMap;
 pub struct Assets {
     sounds: HashMap<SoundType, Vec<SourceHandle>>,
     characters: HashMap<CharacterType, Handle<Texture>>,
-    stills: HashMap<SpriteType, Handle<SpriteSheet>>,
+    avatars: HashMap<Avatar, Handle<SpriteSheet>>,
 }
 
 impl Assets {
@@ -36,18 +36,18 @@ impl Assets {
         .clone()
     }
 
-    pub fn put_still(mut self, asset_type: SpriteType, asset: Handle<SpriteSheet>) -> Self {
-        self.stills.insert(asset_type, asset);
+    pub fn put_avatar(mut self, asset_type: Avatar, asset: Handle<SpriteSheet>) -> Self {
+        self.avatars.insert(asset_type, asset);
         self
     }
 
-    pub fn get_still(&self, asset_type: SpriteType) -> Handle<SpriteSheet> {
+    pub fn get_avatar(&self, asset_type: Avatar) -> Handle<SpriteSheet> {
         (*self
-            .stills
+            .avatars
             .get(&asset_type)
             .or_else(|| {
                 error!("Spritesheet asset {:?} is missing!", asset_type);
-                self.stills.get(&SpriteType::NotFound)
+                self.avatars.get(&Avatar::NotFound)
             })
             .expect("Fallback asset also missing."))
         .clone()
@@ -80,7 +80,7 @@ impl Assets {
 pub enum AssetType {
     /// A static, non-animated image.
     /// Contains both a handle to the sprite sheet and the number of the sprite on the sheet.
-    Still(SpriteType, usize),
+    Avatar(Avatar, usize),
     Character(CharacterType, usize),
     // Animated(AnimType),
 }
@@ -94,10 +94,9 @@ pub fn get_asset_dimensions(asset: &AssetType) -> Pos {
             CharacterType::Cirno => todo!(),
             _ => todo!(),
         },
-        AssetType::Still(sprite_type, _) => match sprite_type {
-            SpriteType::Avatar(Avatar::Default) => Pos::new(50, 50),
-            SpriteType::Avatar(_) => Pos::new(50, 50),
-            _ => Pos::new(128, 128),
+        AssetType::Avatar(avatar_type, _) => match avatar_type {
+            Avatar::Default => Pos::new(50, 50),
+            _ => Pos::new(200, 200),
         },
     }
 }

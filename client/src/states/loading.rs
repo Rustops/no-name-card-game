@@ -59,7 +59,7 @@ impl SimpleState for LoadingState {
         // Load all character sheets for still images and add them to an Assets instance.
         let assets = loading_config.characters.drain(..).fold(
             Assets::default(),
-            |assets, (character_type, texture_path, character_path)| {
+            |assets, (character_type, texture_path)| {
                 let loader = data.world.read_resource::<Loader>();
                 let texture_handle = loader.load(
                     texture_path,
@@ -67,14 +67,14 @@ impl SimpleState for LoadingState {
                     &mut self.progress,
                     &data.world.read_resource::<AssetStorage<Texture>>(),
                 );
-                info!("{:?}, {:?}", character_type, character_path);
+                // info!("{:?}, {:?}", character_type, texture_path);
                 assets.put_character(character_type, texture_handle)
             },
         );
         // Load all sprite sheets for still images and add them to an Assets instance.
-        let assets = loading_config.stills.drain(..).fold(
+        let assets = loading_config.avatars.drain(..).fold(
             assets,
-            |assets, (sprite_type, texture_path, spritesheet_path)| {
+            |assets, (avatar_type, texture_path, spritesheet_path)| {
                 let loader = data.world.read_resource::<Loader>();
                 let texture_handle = loader.load(
                     texture_path,
@@ -82,8 +82,8 @@ impl SimpleState for LoadingState {
                     &mut self.progress,
                     &data.world.read_resource::<AssetStorage<Texture>>(),
                 );
-                assets.put_still(
-                    sprite_type,
+                assets.put_avatar(
+                    avatar_type,
                     loader.load(
                         spritesheet_path,
                         SpriteSheetFormat(texture_handle),

@@ -31,7 +31,7 @@ Container(
                 anchor: BottomLeft,
                 transparent: true,
             ),
-            image: Texture(File("character/flandre.png", ("IMAGE", ()))),
+            image: Texture(File("texture/character/flandre.png", ("IMAGE", ()))),
         )
     ]
 )
