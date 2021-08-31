@@ -1,20 +1,56 @@
-use amethyst::{ecs::prelude::World, ui::UiCreator};
+use amethyst::{
+    ecs::prelude::World,
+    prelude::{Builder, WorldExt},
+    ui::{Anchor, UiImage, UiTransform},
+};
 
-use crate::components::{Player, PlayerRole};
+use crate::{
+    common::{DepthLayer, Pos},
+    components::{Player, PlayerState},
+    resources::{AssetType, Assets, Avatar, CharacterType},
+    utilities::load::load_transform,
+};
 
-pub fn _load_player(world: &mut World) {
-    let player = Player::new();
-    _load_player_role(world, player);
-    // log::info!("[Load::Player] Name: Default_Flandre, Role: Default");
-    // world
-    //     .create_entity()
-    //     .with(Player::new())
-    //     .build();
-}
-
-pub fn _load_player_role(world: &mut World, player: Player) {
-    let img_path = match player.role {
-        PlayerRole::Flandre => "ui/default_player.ron",
+pub fn load_player(world: &mut World, name: String, num: usize) {
+    let avater = {
+        let assets = world.read_resource::<Assets>();
+        assets.get_avatar(Avatar::Default)
     };
-    world.exec(|mut creator: UiCreator<'_>| creator.create(img_path, ()));
+    log::info!("[Load::Avater] {:?}", avater);
+
+    let player = Player::new(
+        name.clone(),
+        PlayerState::Chatting,
+        false,
+        CharacterType::Alice,
+    );
+    log::info!("[Load::Player] {:?}", player);
+
+    let transform = load_transform(
+        Pos::new(0, 0),
+        DepthLayer::UiElements,
+        Pos::new(1, 1),
+        &AssetType::Character(CharacterType::Alice, 3),
+    );
+    log::info!("[Load::Transform] {:?}", transform);
+
+    let ui_image = UiImage::Texture(avater);
+    let ui_transfrom = UiTransform::new(
+        format!("avater_{}", name),
+        Anchor::Middle,
+        Anchor::Middle,
+        -300. + num as f32 * 200.,
+        32.,
+        200.,
+        145.,
+        98.,
+    );
+    log::info!("[Load::UiTransform] {:?}", ui_transfrom);
+
+    world
+        .create_entity()
+        .with(player)
+        .with(ui_image)
+        .with(ui_transfrom)
+        .build();
 }

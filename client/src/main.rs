@@ -6,7 +6,10 @@ use amethyst::{
     input::{InputBundle, StringBindings},
     network::simulation::tcp::TcpNetworkBundle,
     prelude::*,
-    renderer::{plugins::RenderToWindow, types::DefaultBackend, RenderingBundle},
+    renderer::{
+        plugins::RenderToWindow, types::DefaultBackend, RenderDebugLines, RenderFlat2D,
+        RenderingBundle,
+    },
     ui::{RenderUi, UiBundle},
     utils::fps_counter::FpsCounterBundle,
     Result,
@@ -14,6 +17,7 @@ use amethyst::{
 use states::loading::LoadingState;
 use structopt::StructOpt;
 
+mod common;
 mod components;
 mod entities;
 mod resources;
@@ -21,7 +25,10 @@ mod states;
 mod systems;
 mod utilities;
 
-use systems::{chat::ServerInfoResource, play_sfx::PlaySfxSystem};
+use systems::{
+    chat::{ClientInfoResource, ServerInfoResource},
+    play_sfx::PlaySfxSystem,
+};
 use utilities::{
     files::{get_assets_dir, get_config_dir},
     startup::start_game,
@@ -51,9 +58,10 @@ impl Client {
     pub fn init() -> Self {
         Client::from_args()
     }
+
     pub fn run(self) -> Result<()> {
         let server_info = ServerInfoResource { addr: self.url };
-
+        let client_info = ClientInfoResource { name: self.name };
         amethyst::start_logger(Default::default());
 
         let display_config_path = get_config_dir().join("display.ron");
@@ -64,16 +72,18 @@ impl Client {
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
             .with_bundle(FpsCounterBundle)?
+            .with_bundle(ChatroomBundle::new(server_info, client_info))?
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::new()
                     .with_plugin(
                         RenderToWindow::from_config_path(display_config_path)?
                             .with_clear([0.0, 0.0, 0.0, 1.0]),
                     )
-                    .with_plugin(RenderUi::default()),
+                    .with_plugin(RenderFlat2D::default())
+                    .with_plugin(RenderUi::default())
+                    .with_plugin(RenderDebugLines::default()), // .with_plugin(RenderFlat2D::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
-            .with_bundle(ChatroomBundle::new(server_info))?
             .with_system_desc(
                 DjSystemDesc::new(|music: &mut Music| music.music.next()),
                 "dj_system",

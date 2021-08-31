@@ -1,6 +1,8 @@
 use crate::resources::{load_audio_settings, Assets, AudioSettings, Music, UiHandles, UserCache};
 use crate::utilities::files::get_user_cache_file;
+use amethyst::assets::AssetStorage;
 use amethyst::prelude::WorldExt;
+use amethyst::renderer::{ImageFormat, Texture};
 use amethyst::ui::UiCreator;
 use amethyst::ui::UiLoader;
 use log::error;
@@ -37,7 +39,8 @@ impl SimpleState for LoadingState {
 
         // Create a LoadingConfig to tell us what assets to actually load.
         let mut loading_config = load_loading_config();
-
+        info!("Loading succeed => {:?}", loading_config);
+        info!("Load all ui handles.");
         // Load all UI handles.
         let ui_handles =
             loading_config
@@ -53,10 +56,40 @@ impl SimpleState for LoadingState {
                 });
         data.world.insert(ui_handles);
 
+        // Load all character sheets for still images and add them to an Assets instance.
+        let assets = loading_config.characters.drain(..).fold(
+            Assets::default(),
+            |assets, (character_type, texture_path)| {
+                let loader = data.world.read_resource::<Loader>();
+                let texture_handle = loader.load(
+                    texture_path,
+                    ImageFormat::default(),
+                    &mut self.progress,
+                    &data.world.read_resource::<AssetStorage<Texture>>(),
+                );
+                // info!("{:?}, {:?}", character_type, texture_path);
+                assets.put_character(character_type, texture_handle)
+            },
+        );
+        // Load all sprite sheets for still images and add them to an Assets instance.
+        let assets =
+            loading_config
+                .avatars
+                .drain(..)
+                .fold(assets, |assets, (avatar_type, texture_path)| {
+                    let loader = data.world.read_resource::<Loader>();
+                    let texture_handle = loader.load(
+                        texture_path,
+                        ImageFormat::default(),
+                        &mut self.progress,
+                        &data.world.read_resource::<AssetStorage<Texture>>(),
+                    );
+                    assets.put_avatar(avatar_type, texture_handle)
+                });
         // Take the Assets instance we previously filled with stills and animations and
         // add sound effects.
         let assets = loading_config.sound_effects.drain(..).fold(
-            Assets::default(),
+            assets,
             |assets, (sound_type, file_path)| {
                 let loader = data.world.read_resource::<Loader>();
                 assets.put_sound(

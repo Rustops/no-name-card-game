@@ -30,10 +30,64 @@ Container(
                 press_image: Texture(File("texture/menu_btn_press.png", ("IMAGE", ()))),
             )
         ),
+        // Player Lobby
+        Container(
+            transform: (
+                id: "lobby_player_container",
+                x: -100.,
+                y: 0.,
+                width: 1000.,
+                height: 700.,
+                tab_order: 1,
+                anchor: Middle,
+            ),
+            background: Texture(File("texture/bg_chatbox.png", ("IMAGE", ()))),
+            children: [
+                // Show lobby_label
+                Label(
+                    transform: (
+                        id: "lobby_label",
+                        x: 0.,
+                        y: 325,
+                        width: 200.,
+                        height: 50.,
+                        tab_order: 0,
+                        anchor: Middle,
+                        opaque: false,
+                    ),
+                    text: (
+                        text: "当前位置：游戏大厅",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 25.,
+                        color: (0.498, 0.254, 0.937, 1.0),
+                    )
+                ),
+                // Show lobby_escape
+                Label(
+                    transform: (
+                        id: "lobby_escape",
+                        x: 0.,
+                        y: -325,
+                        width: 200.,
+                        height: 50.,
+                        tab_order: 0,
+                        anchor: Middle,
+                        opaque: false,
+                    ),
+                    text: (
+                        text: "按`ESC`键返回主菜单",
+                        font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
+                        font_size: 25.,
+                        color: (0.498, 0.254, 0.937, 1.0),
+                    )
+                ),
+            ]
+        ),
+
         // Chatbox input
         Container(
             transform: (
-                id: "editable_container",
+                id: "lobby_editable_container",
                 x: -120.0,
                 y: 20.0,
                 width: 200.,
@@ -45,7 +99,7 @@ Container(
             children: [
                 Label(
                     transform: (
-                        id: "editable",
+                        id: "lobby_editable",
                         x: 100,
                         width: 200.,
                         height: 15.,
@@ -73,7 +127,7 @@ Container(
         // Chatbox output
         Container(
             transform: (
-                id: "multiline_container",
+                id: "lobby_multiline_container",
                 x: -120.,
                 y: 140.,
                 width: 200.,
@@ -84,7 +138,7 @@ Container(
             children: [
                 Image(
                     transform: (
-                        id: "background",
+                        id: "lobby_multiline_background",
                         x: -100.,
                         y: 100.,
                         width: 200.,
@@ -95,15 +149,16 @@ Container(
                 ),
                 Label(
                     transform: (
-                        id: "multiline",
+                        id: "lobby_multiline",
                         x: -100.,
                         y: 100.,
+                        z: 2.,
                         width: 200.,
                         height: 200.,
                         anchor: BottomRight,
                     ),
                     text: (
-                        text: "Multiline\n",
+                        text: "",
                         font: File("font/AaWuShiXiaoShenXian.ttf", ("TTF", ())),
                         font_size: 15.,
                         color: (0.0, 0.0, 0.0, 1.0),
@@ -116,7 +171,7 @@ Container(
         // Show fps
         Label(
             transform: (
-                id: "fps",
+                id: "lobby_fps",
                 x: 100.,
                 y: -16,
                 width: 200.,

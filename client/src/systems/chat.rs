@@ -1,7 +1,12 @@
 use amethyst::{
+    assets::Handle,
     core::{bundle::SystemBundle, SystemDesc, Time},
-    ecs::{DispatcherBuilder, Entity, Read, System, SystemData, World, Write, WriteStorage},
+    ecs::{
+        DispatcherBuilder, Entity, LazyUpdate, Read, System, SystemData, World, Write, WriteStorage,
+    },
     network::simulation::{NetworkSimulationEvent, NetworkSimulationTime, TransportResource},
+    prelude::WorldExt,
+    renderer::SpriteSheet,
     shrev::{EventChannel, ReaderId},
     ui::{UiEvent, UiEventType, UiFinder, UiText},
     Result,
@@ -9,31 +14,33 @@ use amethyst::{
 use log::{error, info};
 use std::net::SocketAddr;
 
-use crate::resources::SoundType;
+use crate::{components::Player, entities::player::load_player, resources::SoundType};
 
 use super::play_sfx::SoundEvent;
 
 const SERVER_ADDRESS: &str = "127.0.0.1:6666";
+const CLIENT_NAME: &str = "test";
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct ChatroomBundle {
-    server_info: ServerInfoResource,
+    pub server_info: ServerInfoResource,
+    pub client_info: ClientInfoResource,
 }
 
 impl ChatroomBundle {
-    pub fn new(server_info: ServerInfoResource) -> Self {
-        Self { server_info }
+    pub fn new(server_info: ServerInfoResource, client_info: ClientInfoResource) -> Self {
+        Self {
+            server_info,
+            client_info,
+        }
     }
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
-        builder.add(
-            ChatroomSystemDesc::default().build(world),
-            "spam_system",
-            &[],
-        );
         world.insert(ServerInfoResource::new(self.server_info.addr));
+        world.insert(ClientInfoResource::new(self.client_info.name));
+        builder.add(ChatroomSystemDesc.build(world), "chat_system", &[]);
         Ok(())
     }
 }
@@ -54,7 +61,9 @@ impl<'a, 'b> SystemDesc<'a, 'b, ChatroomSystem> for ChatroomSystemDesc {
 
         let ui_reader = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
 
-        ChatroomSystem::new(network_reader, ui_reader)
+        let client = world.fetch::<ClientInfoResource>().name.clone();
+        let server = world.fetch::<ServerInfoResource>().get_addr();
+        ChatroomSystem::new(network_reader, ui_reader, client, server)
     }
 }
 
@@ -63,30 +72,35 @@ struct ChatroomSystem {
     network_reader: ReaderId<NetworkSimulationEvent>,
     ui_reader: ReaderId<UiEvent>,
     chat_output: Option<Entity>,
+    local_name: String,
+    server_addr: SocketAddr,
+    players: Vec<String>,
 }
 
 impl ChatroomSystem {
     pub fn new(
         network_reader: ReaderId<NetworkSimulationEvent>,
         ui_reader: ReaderId<UiEvent>,
+        local_name: String,
+        server_addr: SocketAddr,
     ) -> Self {
         Self {
             network_reader,
             ui_reader,
             chat_output: None,
+            local_name,
+            server_addr,
+            players: vec![],
         }
     }
 
     fn find_ui_elements(&mut self, finder: &UiFinder) {
-        self.chat_output = finder.find("multiline");
+        self.chat_output = finder.find("lobby_multiline");
     }
 }
 
 impl<'a> System<'a> for ChatroomSystem {
-    #[allow(clippy::type_complexity)]
     type SystemData = (
-        // ReadStorage<'a, ServerInfoResource>,
-        Read<'a, ServerInfoResource>,
         UiFinder<'a>,
         Read<'a, EventChannel<UiEvent>>,
         Read<'a, NetworkSimulationTime>,
@@ -95,12 +109,12 @@ impl<'a> System<'a> for ChatroomSystem {
         Read<'a, EventChannel<NetworkSimulationEvent>>,
         WriteStorage<'a, UiText>,
         Write<'a, EventChannel<SoundEvent>>,
+        Read<'a, LazyUpdate>,
     );
 
     fn run(
         &mut self,
         (
-            server_info,
             ui_finder,
             ui_event,
             _sim_time,
@@ -109,6 +123,7 @@ impl<'a> System<'a> for ChatroomSystem {
             event,
             mut ui_text,
             mut sound_channel,
+            lazy,
         ): Self::SystemData,
     ) {
         ui_event
@@ -118,13 +133,14 @@ impl<'a> System<'a> for ChatroomSystem {
                 if let Some(input) = ui_text.get_mut(event.target) {
                     // play sound_effect
                     sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
-                    let msg = input.text.clone();
+                    let msg = format!("{}-Chat-{}", self.local_name, input.text.clone());
                     info!(
-                        "[{}] Sending message: {}",
+                        "[{}][{}] Sending message: {}",
                         time.absolute_time_seconds(),
+                        self.local_name,
                         &msg
                     );
-                    net.send(server_info.get_addr(), msg.as_bytes());
+                    net.send(self.server_addr, msg.as_bytes());
                     input.text = String::from("");
                 }
             });
@@ -132,22 +148,47 @@ impl<'a> System<'a> for ChatroomSystem {
         for event in event.read(&mut self.network_reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
-                    info!("Recv msg: {:?} from {}", payload, addr);
+                    // Highly centralized
+                    if addr != &self.server_addr {
+                        continue;
+                    }
+                    info!("Recv msg: {:?} from Server {}", payload, addr);
                     self.find_ui_elements(&ui_finder);
+                    // Converting messages to human-readable form
+                    let p = payload.clone().to_vec();
+                    let s = String::from_utf8(p).unwrap();
+                    let ss: Vec<&str> = s.split('-').collect();
 
-                    if let Some(chat_output) = self.chat_output {
-                        if let Some(output) = ui_text.get_mut(chat_output) {
-                            let raw_msg = payload.to_vec();
-                            let msg = String::from_utf8_lossy(&raw_msg);
-
-                            let total_msg = output.text.clone();
-                            let new_total_msg = format!("{}{} \n", total_msg, msg);
-
-                            output.text = new_total_msg;
+                    if ss.len() >= 3 && ss[1] == "Chat" {
+                        log::info!("[Chat] Update chatbox output");
+                        if let Some(chat_output) = self.chat_output {
+                            log::info!("[Chat] Getting the interaction ui entity right");
+                            if let Some(output) = ui_text.get_mut(chat_output) {
+                                let total_msg = output.text.clone();
+                                let new_total_msg =
+                                    format!("{}[{}]:{} \n", total_msg, ss[0], ss[2]);
+                                log::info!("[Chat] Update chatbox content: {}", new_total_msg);
+                                output.text = new_total_msg;
+                            }
                         }
                     }
+                    if ss.len() >= 3 && ss[1] == "Enter" && ss[2] == "Lobby" {
+                        // TODO: create player entity
+                        let num = self.players.len();
+                        let name = String::from(ss[0]);
+                        if self.players.contains(&name) {
+                            continue;
+                        }
+                        self.players.push(name.clone());
+                        log::info!("[Chat] Prepare loading player");
+                        lazy.exec_mut(move |world| {
+                            load_player(world, name, num);
+                        });
+                    }
                 }
-                NetworkSimulationEvent::Connect(addr) => info!("New client connection: {}", addr),
+                NetworkSimulationEvent::Connect(addr) => {
+                    info!("New client connection: {}", addr);
+                }
                 NetworkSimulationEvent::Disconnect(addr) => info!("Server Disconnected: {}", addr),
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);
@@ -158,6 +199,12 @@ impl<'a> System<'a> for ChatroomSystem {
                 _ => {}
             }
         }
+    }
+
+    fn setup(&mut self, world: &mut World) {
+        world.register::<Player>();
+        world.register::<Handle<SpriteSheet>>();
+        <Self as System<'_>>::SystemData::setup(world);
     }
 }
 
@@ -180,6 +227,25 @@ impl Default for ServerInfoResource {
     fn default() -> Self {
         Self {
             addr: SERVER_ADDRESS.parse().unwrap(),
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct ClientInfoResource {
+    pub name: String,
+}
+
+impl ClientInfoResource {
+    pub fn new(name: String) -> Self {
+        Self { name }
+    }
+}
+
+impl Default for ClientInfoResource {
+    fn default() -> Self {
+        Self {
+            name: CLIENT_NAME.to_string(),
         }
     }
 }
