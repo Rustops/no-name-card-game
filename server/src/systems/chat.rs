@@ -80,7 +80,7 @@ impl<'a> System<'a> for ChatReceiveSystem {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("{}: {:?}", addr, payload);
-
+                    // TODO: impl better message format @rjman-ljm
                     // Converting messages to human-readable form
                     let p = payload.clone().to_vec();
                     let s = String::from_utf8(p).unwrap();
