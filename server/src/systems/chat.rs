@@ -87,7 +87,7 @@ impl<'a> System<'a> for ChatReceiveSystem {
                     let ss: Vec<&str> = s.split('-').collect();
 
                     if ss.len() >= 3 && ss[1] == "Connect" && ss[2] == "Request" {
-                        self.players.insert(addr.clone(), String::from(ss[0]));
+                        self.players.insert(*addr, String::from(ss[0]));
                         self.players.iter().for_each(|(_, name)| {
                             let message = format!("{}-Enter-Lobby", name);
                             info!("[Client::Connect]{}", message);
