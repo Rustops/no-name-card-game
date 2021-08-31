@@ -11,7 +11,7 @@ use amethyst::{
 use super::pause::PauseMenuState;
 use crate::{
     common::camera::*,
-    entities::player::load_player,
+    // entities::player::load_player,
     resources::{UiHandles, UiType},
     states::select_character::SelectState,
 };
@@ -41,17 +41,17 @@ impl Lobby {
         // invoke a world update to finish creating our ui entities
         data.data.update(data.world);
     }
-    fn init_avatar(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
-        load_player(data.world);
-    }
+    // fn init_avatar(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
+    //     load_player(data.world);
+    // }
 }
 
 impl SimpleState for Lobby {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         // let StateData { mut world, .. } = data;
         self.init_ui(&mut data);
-        self.init_avatar(&mut data);
-        load_player(data.world);
+        // self.init_avatar(&mut data);
+        // load_player(data.world);
 
         initialise_camera(&mut data.world);
         // load_player(data.world);

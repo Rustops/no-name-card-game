@@ -14,7 +14,7 @@ use amethyst::{
 use log::{error, info};
 use std::net::SocketAddr;
 
-use crate::{components::Player, resources::SoundType};
+use crate::{components::Player, entities::player::load_player, resources::SoundType};
 
 use super::play_sfx::SoundEvent;
 
@@ -74,6 +74,7 @@ struct ChatroomSystem {
     chat_output: Option<Entity>,
     local_name: String,
     server_addr: SocketAddr,
+    players: Vec<String>,
 }
 
 impl ChatroomSystem {
@@ -89,6 +90,7 @@ impl ChatroomSystem {
             chat_output: None,
             local_name,
             server_addr,
+            players: vec![],
         }
     }
 
@@ -121,7 +123,7 @@ impl<'a> System<'a> for ChatroomSystem {
             event,
             mut ui_text,
             mut sound_channel,
-            _lazy,
+            lazy,
         ): Self::SystemData,
     ) {
         ui_event
@@ -152,12 +154,12 @@ impl<'a> System<'a> for ChatroomSystem {
                     }
                     info!("Recv msg: {:?} from Server {}", payload, addr);
                     self.find_ui_elements(&ui_finder);
-
+                    // Converting messages to human-readable form
                     let p = payload.clone().to_vec();
                     let s = String::from_utf8(p).unwrap();
                     let ss: Vec<&str> = s.split('-').collect();
 
-                    if ss[1] == "Chat" {
+                    if ss.len() >= 3 && ss[1] == "Chat" {
                         log::info!("[Chat] Update chatbox output");
                         if let Some(chat_output) = self.chat_output {
                             log::info!("[Chat] Getting the interaction ui entity right");
@@ -170,11 +172,18 @@ impl<'a> System<'a> for ChatroomSystem {
                             }
                         }
                     }
-                    if ss[1] == "Connect" {
+                    if ss.len() >= 3 && ss[1] == "Enter" && ss[2] == "Lobby" {
                         // TODO: create player entity
-                        // lazy.exec_mut(move |world| {
-                        //     load_player(world);
-                        // });
+                        let num = self.players.len();
+                        let name = String::from(ss[0]);
+                        if self.players.contains(&name) {
+                            continue;
+                        }
+                        self.players.push(name.clone());
+                        log::info!("[Chat] Prepare loading player");
+                        lazy.exec_mut(move |world| {
+                            load_player(world, name, num);
+                        });
                     }
                 }
                 NetworkSimulationEvent::Connect(addr) => {

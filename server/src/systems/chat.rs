@@ -1,4 +1,4 @@
-use std::{convert::TryInto, net::SocketAddr};
+use std::{collections::HashMap, convert::TryInto, net::SocketAddr, thread::sleep, time::Duration};
 
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
@@ -14,8 +14,8 @@ use log::{error, info};
 
 // const HEARTBEAT_PU: &str = "HEARTBEAT:PU";
 // const HEARTBEAT_TONG: &str = "HEARTBEAT:TONG";
-const ENOUGH_PLAYER: &str = "There are already enough players in the room, do you want to start the game? please input Y/N.";
-const START_GAME: &str = "\nStart Game!";
+// const ENOUGH_PLAYER: &str = "There are already enough players in the room, do you want to start the game? please input Y/N.";
+// const START_GAME: &str = "\nStart Game!";
 
 #[derive(Debug)]
 pub struct ChatReceiveBundle;
@@ -52,6 +52,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, ChatReceiveSystem> for ChatReceiveSystemDesc {
 struct ChatReceiveSystem {
     reader: ReaderId<NetworkSimulationEvent>,
     connection: Vec<SocketAddr>,
+    players: HashMap<SocketAddr, String>,
     online_num: u32,
     game_room: Vec<SocketAddr>,
 }
@@ -61,6 +62,7 @@ impl ChatReceiveSystem {
         Self {
             reader,
             connection: Vec::new(),
+            players: HashMap::default(),
             online_num: 0,
             game_room: Vec::new(),
         }
@@ -79,6 +81,24 @@ impl<'a> System<'a> for ChatReceiveSystem {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("{}: {:?}", addr, payload);
 
+                    // Converting messages to human-readable form
+                    let p = payload.clone().to_vec();
+                    let s = String::from_utf8(p).unwrap();
+                    let ss: Vec<&str> = s.split('-').collect();
+
+                    if ss.len() >= 3 && ss[1] == "Connect" && ss[2] == "Request" {
+                        self.players.insert(addr.clone(), String::from(ss[0]));
+                        self.players.iter().for_each(|(_, name)| {
+                            let message = format!("{}-Enter-Lobby", name);
+                            info!("[Client::Connect]{}", message);
+                            self.connection
+                                .iter()
+                                .for_each(|s| net.send(*s, message.as_bytes()));
+                            sleep(Duration::from_secs(1))
+                        });
+                        continue;
+                    }
+
                     // In a typical client/server simulation, both the client and the server will
                     // be exchanging messages at a constant rate. Laminar makes use of this by
                     // packaging message acks with the next sent message. Therefore, in order for
@@ -94,17 +114,17 @@ impl<'a> System<'a> for ChatReceiveSystem {
                         self.game_room.push(*addr);
                         info!("{} Confirm to play, total: {:?}", addr, self.game_room);
 
-                        if self.game_room.len() == 2 {
-                            info!("Players Enough");
-                            let _v: Vec<_> = self
-                                .game_room
-                                .iter()
-                                .map(|x| net.send(*x, START_GAME.as_bytes()))
-                                .collect();
+                        // if self.game_room.len() == 2 {
+                        //     info!("Players Enough");
+                        //     let _v: Vec<_> = self
+                        //         .game_room
+                        //         .iter()
+                        //         .map(|x| net.send(*x, START_GAME.as_bytes()))
+                        //         .collect();
 
-                            // Rest game_room
-                            self.game_room.clear();
-                        }
+                        //     // Rest game_room
+                        //     self.game_room.clear();
+                        // }
                     }
                 }
                 NetworkSimulationEvent::Connect(addr) => {
@@ -115,11 +135,11 @@ impl<'a> System<'a> for ChatReceiveSystem {
 
                     if self.online_num >= 2 {
                         info!("Online players >= 2, send msg to players");
-                        let _v: Vec<_> = self
-                            .connection
-                            .iter()
-                            .map(|x| net.send(*x, ENOUGH_PLAYER.as_bytes()))
-                            .collect();
+                        // let _v: Vec<_> = self
+                        //     .connection
+                        //     .iter()
+                        //     .map(|x| net.send(*x, ENOUGH_PLAYER.as_bytes()))
+                        //     .collect();
                     }
                 }
                 NetworkSimulationEvent::Disconnect(addr) => {
@@ -127,6 +147,7 @@ impl<'a> System<'a> for ChatReceiveSystem {
                     let index = self.connection.iter().position(|x| *x == *addr).unwrap();
                     self.connection.remove(index);
                     self.online_num = self.connection.len().try_into().unwrap();
+                    self.players.remove(addr);
                     info!("Online player num: {:?}", self.online_num);
                 }
                 NetworkSimulationEvent::RecvError(e) => {
