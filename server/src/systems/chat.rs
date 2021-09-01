@@ -1,4 +1,8 @@
-use std::{collections::HashMap, convert::TryInto, net::SocketAddr, thread::sleep, time::Duration};
+use std::{
+    collections::HashMap,
+    convert::TryInto,
+    net::{SocketAddr, UdpSocket},
+};
 
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
@@ -88,13 +92,14 @@ impl<'a> System<'a> for ChatReceiveSystem {
 
                     if ss.len() >= 3 && ss[1] == "Connect" && ss[2] == "Request" {
                         self.players.insert(*addr, String::from(ss[0]));
+
                         self.players.iter().for_each(|(_, name)| {
                             let message = format!("{}-Enter-Lobby", name);
                             info!("[Client::Connect]{}", message);
-                            self.connection
-                                .iter()
-                                .for_each(|s| net.send(*s, message.as_bytes()));
-                            sleep(Duration::from_secs(1))
+                            self.connection.iter().for_each(|s| {
+                                let udp_socket = UdpSocket::bind(s).unwrap();
+                                udp_socket.send(message.as_bytes()).unwrap();
+                            });
                         });
                         continue;
                     }

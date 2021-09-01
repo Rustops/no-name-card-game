@@ -1,3 +1,4 @@
+use amethyst::network::simulation::udp::{UdpNetworkRecvSystem, UdpNetworkSendSystem};
 use amethyst::{
     core::frame_limiter::FrameRateLimitStrategy, network::simulation::tcp::TcpNetworkBundle,
     prelude::*, utils::application_root_dir, Result,
@@ -44,6 +45,13 @@ impl Server {
         let assets_dir = application_root_dir()?.join("assets");
         let game_data = GameDataBuilder::default()
             .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
+            // The tcp bundle and the udp bundle have duplicate parts that will conflict and can only be added to the udp system separately
+            .with(
+                UdpNetworkRecvSystem::with_buffer_capacity(2048),
+                "udp_recv",
+                &["simulation_time"],
+            )
+            .with(UdpNetworkSendSystem, "udp_send", &["simulation_time"])
             .with_bundle(ChatReceiveBundle)?;
 
         let mut game = Application::build(assets_dir, GameState)?

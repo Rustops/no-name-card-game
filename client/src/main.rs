@@ -4,7 +4,10 @@ use amethyst::{
     core::TransformBundle,
     ecs::{Component, VecStorage},
     input::{InputBundle, StringBindings},
-    network::simulation::tcp::TcpNetworkBundle,
+    network::simulation::{
+        tcp::TcpNetworkBundle,
+        udp::{UdpNetworkRecvSystem, UdpNetworkSendSystem},
+    },
     prelude::*,
     renderer::{
         plugins::RenderToWindow, types::DefaultBackend, RenderDebugLines, RenderFlat2D,
@@ -84,6 +87,13 @@ impl Client {
                     .with_plugin(RenderDebugLines::default()), // .with_plugin(RenderFlat2D::default()),
             )?
             .with_bundle(TcpNetworkBundle::new(None, 2048))?
+            // The tcp bundle and the udp bundle have duplicate parts that will conflict and can only be added to the udp system separately
+            .with(
+                UdpNetworkRecvSystem::with_buffer_capacity(2048),
+                "udp_recv",
+                &["simulation_time"],
+            )
+            .with(UdpNetworkSendSystem, "udp_send", &["simulation_time"])
             .with_system_desc(
                 DjSystemDesc::new(|music: &mut Music| music.music.next()),
                 "dj_system",
