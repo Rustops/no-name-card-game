@@ -1,3 +1,5 @@
+use std::net::{SocketAddr, UdpSocket};
+
 use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down},
@@ -46,6 +48,17 @@ impl MainMenu {
         let mut net = world.fetch_mut::<TransportResource>();
         let conn_msg = format!("{}-Connect-Request", client.name);
 
+        let addr = SocketAddr::from(([127, 0, 0, 1], 9999));
+
+        let socket = UdpSocket::bind(addr).unwrap();
+        match socket.connect(server.get_addr()) {
+            Ok(()) => info!("[UDP] Connect Succeed!"),
+            Err(e) => info!("[UDP] Connect Failed: {}!", e),
+        };
+        match socket.send(conn_msg.as_bytes()) {
+            Ok(_) => info!("[UDP] Send Succeed!"),
+            Err(e) => info!("[UDP] Send Failed: {}!", e),
+        }
         net.send(server.get_addr(), conn_msg.as_bytes());
     }
 }

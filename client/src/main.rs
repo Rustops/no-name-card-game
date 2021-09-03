@@ -4,7 +4,7 @@ use amethyst::{
     core::TransformBundle,
     ecs::{Component, VecStorage},
     input::{InputBundle, StringBindings},
-    network::simulation::tcp::TcpNetworkBundle,
+    network::simulation::udp::UdpNetworkBundle,
     prelude::*,
     renderer::{
         plugins::RenderToWindow, types::DefaultBackend, RenderDebugLines, RenderFlat2D,
@@ -83,7 +83,7 @@ impl Client {
                     .with_plugin(RenderUi::default())
                     .with_plugin(RenderDebugLines::default()), // .with_plugin(RenderFlat2D::default()),
             )?
-            .with_bundle(TcpNetworkBundle::new(None, 2048))?
+            .with_bundle(UdpNetworkBundle::new(None, 2048))?
             .with_system_desc(
                 DjSystemDesc::new(|music: &mut Music| music.music.next()),
                 "dj_system",

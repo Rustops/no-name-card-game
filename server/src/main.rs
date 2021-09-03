@@ -41,6 +41,7 @@ impl Server {
         listener.set_nonblocking(true)?;
 
         let socket = UdpSocket::bind(listener_addrs)?;
+        socket.set_nonblocking(true)?;
         let assets_dir = application_root_dir()?.join("assets");
         let game_data =
             GameDataBuilder::default().with_bundle(ServiceBundle::new(listener, socket, 2048))?;

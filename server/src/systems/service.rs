@@ -13,6 +13,7 @@ use amethyst::{
                 TcpConnectionListenerSystem, TcpNetworkRecvSystem, TcpNetworkResource,
                 TcpNetworkSendSystem, TcpStreamManagementSystem,
             },
+            udp::{UdpNetworkRecvSystem, UdpNetworkSendSystem, UdpSocketResource},
             NetworkSimulationEvent, NetworkSimulationTimeSystem, TransportResource,
         },
         Bytes,
@@ -72,14 +73,14 @@ impl<'a, 'b> SystemBundle<'a, 'b> for ServiceBundle {
             self.recv_buffer_size_bytes,
         ));
 
-        // builder.add(
-        //     UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
-        //     "udp_recv",
-        //     &["simulation_time"],
-        // );
-        // builder.add(UdpNetworkSendSystem, "udp_send", &["simulation_time"]);
+        builder.add(
+            UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
+            "udp_recv",
+            &["simulation_time"],
+        );
+        builder.add(UdpNetworkSendSystem, "udp_send", &["simulation_time"]);
 
-        // world.insert(UdpSocketResource::new(self.socket));
+        world.insert(UdpSocketResource::new(self.socket));
 
         builder.add(
             ServiceSystemDesc::default().build(world),
