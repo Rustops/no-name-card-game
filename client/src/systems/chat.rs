@@ -11,7 +11,8 @@ use amethyst::{
     ui::{UiEvent, UiEventType, UiFinder, UiText},
     Result,
 };
-use log::{error, info};
+use log::{debug, error, info, warn};
+use shared::msg::{MessageLayer, TransMessage};
 use std::net::SocketAddr;
 
 use crate::{components::Player, entities::player::load_player, resources::SoundType};
@@ -133,14 +134,25 @@ impl<'a> System<'a> for ChatroomSystem {
                 if let Some(input) = ui_text.get_mut(event.target) {
                     // play sound_effect
                     sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
-                    let msg = format!("{}-Chat-{}", self.local_name, input.text.clone());
+                    // let msg = format!("{}-Chat-{}", self.local_name, input.text.clone());
                     info!(
                         "[{}][{}] Sending message: {}",
                         time.absolute_time_seconds(),
                         self.local_name,
-                        &msg
+                        &input.text,
                     );
-                    net.send(self.server_addr, msg.as_bytes());
+
+                    let trans_message = TransMessage::new(
+                        MessageLayer::ChatMessage,
+                        format!("{}", self.local_name),
+                        input.text.clone(),
+                    );
+
+                    net.send(
+                        self.server_addr,
+                        trans_message.serialize().unwrap().as_bytes()
+                    );
+                    // Reset input text
                     input.text = String::from("");
                 }
             });
@@ -148,43 +160,57 @@ impl<'a> System<'a> for ChatroomSystem {
         for event in event.read(&mut self.network_reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
-                    // Highly centralized
-                    if addr != &self.server_addr {
-                        continue;
-                    }
-                    info!("Recv msg: {:?} from Server {}", payload, addr);
-                    self.find_ui_elements(&ui_finder);
-                    // Converting messages to human-readable form
-                    let p = payload.clone().to_vec();
-                    let s = String::from_utf8(p).unwrap();
-                    let ss: Vec<&str> = s.split('-').collect();
-
-                    if ss.len() >= 3 && ss[1] == "Chat" {
-                        log::info!("[Chat] Update chatbox output");
-                        if let Some(chat_output) = self.chat_output {
-                            log::info!("[Chat] Getting the interaction ui entity right");
-                            if let Some(output) = ui_text.get_mut(chat_output) {
-                                let total_msg = output.text.clone();
-                                let new_total_msg =
-                                    format!("{}[{}]:{} \n", total_msg, ss[0], ss[2]);
-                                log::info!("[Chat] Update chatbox content: {}", new_total_msg);
-                                output.text = new_total_msg;
-                            }
+                    info!("Client Received from {}: {:?}", addr, payload);
+                    if let Ok(resp) = serde_json::from_slice::<TransMessage>(&payload) {
+                        info!("msg is {:?}", resp);
+                        self.find_ui_elements(&ui_finder);
+                        match resp {
+                            TransMessage::Default(m) => {
+                                info!("Received: [SendToServer]");
+                                info!("Unimplemented: {:?}", m);
+                            },
+                            TransMessage::ResponseImOnline(m) => {
+                                info!("Received: [SendToServer]");
+                                info!("Unimplemented: {:?}", m);
+                            },
+                            TransMessage::ForwardChatMessage(m) => {
+                                info!("Received: [ForwardChatMessage]");
+                                info!("[Chat] Update chatbox output");
+                                if let Some(chat_output) = self.chat_output {
+                                    info!("[Chat] Getting the interaction ui entity right");
+                                    if let Some(output) = ui_text.get_mut(chat_output) {
+                                        let total_msg = output.text.clone();
+                                        let new_total_msg =
+                                            format!("{}[{}]:{} \n", total_msg, m.from, m.msg);
+                                        info!("[Chat] Update chatbox content: {}", new_total_msg);
+                                        output.text = new_total_msg;
+                                    }
+                                }
+                            },
+                            TransMessage::PlayerEnterLobby(m) => {
+                                info!("Received: [PlayerEnterLobby]");
+                                // TODO: create player entity
+                                let num = self.players.len();
+                                let name = String::from(m.from);
+                                if self.players.contains(&name) {
+                                    continue;
+                                }
+                                self.players.push(name.clone());
+                                log::info!("[Chat] Prepare loading player");
+                                lazy.exec_mut(move |world| {
+                                    load_player(world, name, num);
+                                });
+                            },
+                            TransMessage::Order(m) => {
+                                info!("Received: [Order]");
+                                info!("Unimplemented: {:?}", m);
+                            },
+                            _ => debug!("Message is not for me"),
                         }
-                    }
-                    if ss.len() >= 3 && ss[1] == "Enter" && ss[2] == "Lobby" {
-                        // TODO: create player entity
-                        let num = self.players.len();
-                        let name = String::from(ss[0]);
-                        if self.players.contains(&name) {
-                            continue;
-                        }
-                        self.players.push(name.clone());
-                        log::info!("[Chat] Prepare loading player");
-                        lazy.exec_mut(move |world| {
-                            load_player(world, name, num);
-                        });
-                    }
+                    } else {
+                        warn!("Received messages that cannot be processed. {:?}", 
+                            String::from_utf8(payload.clone().to_vec()).unwrap());
+                    };
                 }
                 NetworkSimulationEvent::Connect(addr) => {
                     info!("New client connection: {}", addr);

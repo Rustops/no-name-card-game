@@ -13,7 +13,7 @@ use crate::{
     states::lobby::Lobby,
     systems::chat::{ClientInfoResource, ServerInfoResource},
 };
-
+use shared::utilities::msg::{TransMessage, Message, MessageLayer};
 use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 
 const BUTTON_START: &str = "start";
@@ -44,9 +44,18 @@ impl MainMenu {
         let client = world.fetch::<ClientInfoResource>();
         let server = world.fetch::<ServerInfoResource>();
         let mut net = world.fetch_mut::<TransportResource>();
-        let conn_msg = format!("{}-Connect-Request", client.name);
+        let msg = Message::new(
+            format!("{}", client.name),
+            "I want to connect to the server".to_owned()
+        );
 
-        net.send(server.get_addr(), conn_msg.as_bytes());
+        let trans_message = TransMessage::construct(MessageLayer::ConnectRequest, msg);
+
+        // FIXME: unwrap()
+        net.send(
+            server.get_addr(),
+            trans_message.serialize().unwrap().as_bytes()
+        );
     }
 }
 
