@@ -1,14 +1,20 @@
 use std::{
     collections::HashMap,
     convert::TryInto,
-    net::{SocketAddr, UdpSocket},
+    net::{SocketAddr, TcpListener, UdpSocket},
 };
 
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
     network::{
-        simulation::{NetworkSimulationEvent, TransportResource},
+        simulation::{
+            tcp::{
+                TcpConnectionListenerSystem, TcpNetworkRecvSystem, TcpNetworkResource,
+                TcpNetworkSendSystem, TcpStreamManagementSystem,
+            },
+            NetworkSimulationEvent, NetworkSimulationTimeSystem, TransportResource,
+        },
         Bytes,
     },
     shrev::{EventChannel, ReaderId},
@@ -16,44 +22,94 @@ use amethyst::{
 };
 use log::{error, info};
 
-// const HEARTBEAT_PU: &str = "HEARTBEAT:PU";
-// const HEARTBEAT_TONG: &str = "HEARTBEAT:TONG";
-// const ENOUGH_PLAYER: &str = "There are already enough players in the room, do you want to start the game? please input Y/N.";
-// const START_GAME: &str = "\nStart Game!";
-
 #[derive(Debug)]
-pub struct ChatReceiveBundle;
+pub struct ServiceBundle {
+    listener: Option<TcpListener>,
+    socket: Option<UdpSocket>,
+    recv_buffer_size_bytes: usize,
+}
 
-impl<'a, 'b> SystemBundle<'a, 'b> for ChatReceiveBundle {
+impl ServiceBundle {
+    pub fn new(listener: TcpListener, socket: UdpSocket, recv_buffer_size_bytes: usize) -> Self {
+        Self {
+            listener: Some(listener),
+            socket: Some(socket),
+            recv_buffer_size_bytes,
+        }
+    }
+}
+
+impl<'a, 'b> SystemBundle<'a, 'b> for ServiceBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(NetworkSimulationTimeSystem, "simulation_time", &[]);
+
         builder.add(
-            ChatReceiveSystemDesc::default().build(world),
-            "receiving_system",
+            TcpConnectionListenerSystem,
+            "connection_listener",
+            &["simulation_time"],
+        );
+
+        builder.add(
+            TcpStreamManagementSystem,
+            "stream_management",
+            &["simulation_time"],
+        );
+
+        builder.add(
+            TcpNetworkSendSystem,
+            "tcp_send",
+            &["stream_management", "connection_listener"],
+        );
+
+        builder.add(
+            TcpNetworkRecvSystem,
+            "tcp_recv",
+            &["stream_management", "connection_listener"],
+        );
+
+        world.insert(TcpNetworkResource::new(
+            self.listener,
+            self.recv_buffer_size_bytes,
+        ));
+
+        // builder.add(
+        //     UdpNetworkRecvSystem::with_buffer_capacity(self.recv_buffer_size_bytes),
+        //     "udp_recv",
+        //     &["simulation_time"],
+        // );
+        // builder.add(UdpNetworkSendSystem, "udp_send", &["simulation_time"]);
+
+        // world.insert(UdpSocketResource::new(self.socket));
+
+        builder.add(
+            ServiceSystemDesc::default().build(world),
+            "service_system",
             &[],
         );
+
         Ok(())
     }
 }
 
 #[derive(Default, Debug)]
-pub struct ChatReceiveSystemDesc;
+pub struct ServiceSystemDesc;
 
-impl<'a, 'b> SystemDesc<'a, 'b, ChatReceiveSystem> for ChatReceiveSystemDesc {
-    fn build(self, world: &mut World) -> ChatReceiveSystem {
+impl<'a, 'b> SystemDesc<'a, 'b, ServiceSystem> for ServiceSystemDesc {
+    fn build(self, world: &mut World) -> ServiceSystem {
         // Creates the EventChannel<NetworkEvent> managed by the ECS.
-        <ChatReceiveSystem as System<'_>>::SystemData::setup(world);
+        <ServiceSystem as System<'_>>::SystemData::setup(world);
         // Fetch the change we just created and call `register_reader` to get a
         // ReaderId<NetworkEvent>. This reader id is used to fetch new events from the network event
         // channel.
         let reader = world
             .fetch_mut::<EventChannel<NetworkSimulationEvent>>()
             .register_reader();
-        ChatReceiveSystem::new(reader)
+        ServiceSystem::new(reader)
     }
 }
 
 /// A simple system that receives a ton of network events.
-struct ChatReceiveSystem {
+struct ServiceSystem {
     reader: ReaderId<NetworkSimulationEvent>,
     connection: Vec<SocketAddr>,
     players: HashMap<SocketAddr, String>,
@@ -61,7 +117,7 @@ struct ChatReceiveSystem {
     game_room: Vec<SocketAddr>,
 }
 
-impl ChatReceiveSystem {
+impl ServiceSystem {
     pub fn new(reader: ReaderId<NetworkSimulationEvent>) -> Self {
         Self {
             reader,
@@ -73,7 +129,7 @@ impl ChatReceiveSystem {
     }
 }
 
-impl<'a> System<'a> for ChatReceiveSystem {
+impl<'a> System<'a> for ServiceSystem {
     type SystemData = (
         Write<'a, TransportResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
@@ -84,7 +140,7 @@ impl<'a> System<'a> for ChatReceiveSystem {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("{}: {:?}", addr, payload);
-
+                    // let socket = socket.get_mut().unwrap();
                     // Converting messages to human-readable form
                     let p = payload.clone().to_vec();
                     let s = String::from_utf8(p).unwrap();
@@ -97,8 +153,10 @@ impl<'a> System<'a> for ChatReceiveSystem {
                             let message = format!("{}-Enter-Lobby", name);
                             info!("[Client::Connect]{}", message);
                             self.connection.iter().for_each(|s| {
-                                let udp_socket = UdpSocket::bind(s).unwrap();
-                                udp_socket.send(message.as_bytes()).unwrap();
+                                info!("[Response] Broadcast!");
+                                net.send(*s, message.as_bytes());
+                                // let _ = socket.connect(s);
+                                // socket.send(message.as_bytes()).unwrap();
                             });
                         });
                         continue;
