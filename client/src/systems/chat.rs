@@ -161,7 +161,7 @@ impl<'a> System<'a> for ChatroomSystem {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("Client Received from {}: {:?}", addr, payload);
-                    if let Ok(resp) = serde_json::from_slice::<TransMessage>(&payload) {
+                    if let Ok(resp) = serde_json::from_slice::<TransMessage>(payload) {
                         info!("msg is {:?}", resp);
                         self.find_ui_elements(&ui_finder);
                         match resp {
