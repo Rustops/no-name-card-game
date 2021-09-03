@@ -1,6 +1,6 @@
-use std::{fmt::{self, Display, Formatter}};
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
+use std::fmt::{self, Display, Formatter};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum MessageLayer {
@@ -36,7 +36,7 @@ pub enum TransMessage {
     ForwardChatMessage(Message),
     /// Players enter the lobby
     PlayerEnterLobby(Message),
-    
+
     /// Command message sent by the server to the client
     Order(Message),
 
@@ -84,8 +84,8 @@ pub type Result<T> = std::result::Result<T, MessageError>;
 
 impl TransMessage {
     pub fn new(layer: MessageLayer, from: String, msg: String) -> TransMessage {
-        let msg = Message::new(from.to_string(), msg);
-        TransMessage::construct(layer,msg)
+        let msg = Message::new(from, msg);
+        TransMessage::construct(layer, msg)
     }
 
     pub fn construct(layer: MessageLayer, m: Message) -> TransMessage {
@@ -107,11 +107,6 @@ impl TransMessage {
         serde_json::to_string(&self).map_err::<Error, _>(Into::into)
     }
 
-    pub fn to_bytes(&self) -> Result<Vec<u8>> {
-        let json = self.serialize()?;
-        Ok((*json.clone().as_bytes()).to_vec())
-    }
-
     pub fn update_layer(&mut self, layer: MessageLayer) -> Self {
         let m = match self {
             TransMessage::Default(m) => m,
@@ -125,11 +120,10 @@ impl TransMessage {
             TransMessage::PlayerEnterLobby(m) => m,
         };
         let msg = Message::new(m.from.clone(), m.msg.clone());
-    
+
         // Fixed msg, but change layer
         TransMessage::construct(layer, msg)
     }
-    
 }
 
 impl Message {
@@ -159,24 +153,15 @@ impl Message {
 impl Display for TransMessage {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         match self {
-            TransMessage::Default(m) => 
-                write!(f, "Default [{}]: {}", m.from, m.msg),
-            TransMessage::BroadcastToClients(m) => 
-                write!(f, "S2C [{}]: {}", m.from, m.msg),
-            TransMessage::Order(m) => 
-                write!(f, "Ord [{}]: {}", m.from, m.msg),
-            TransMessage::ConnectRequest(m) => 
-                write!(f, "ConnReq [{}]: {}", m.from, m.msg),
-            TransMessage::SendToServer(m) => 
-                write!(f, "C2S [{}]: {}", m.from, m.msg),
-            TransMessage::ChatMessage(m) =>
-                write!(f, "Chat [{}]: {}", m.from, m.msg),
-            TransMessage::ForwardChatMessage(m) => 
-                write!(f, "FChat [{}]: {}", m.from, m.msg),
-            TransMessage::ResponseImOnline(m) =>
-                write!(f, "Online [{}]: {}", m.from, m.msg),
-            TransMessage::PlayerEnterLobby(m) =>
-                write!(f, "InLobby [{}]: {}", m.from, m.msg),
+            TransMessage::Default(m) => write!(f, "Default [{}]: {}", m.from, m.msg),
+            TransMessage::BroadcastToClients(m) => write!(f, "S2C [{}]: {}", m.from, m.msg),
+            TransMessage::Order(m) => write!(f, "Ord [{}]: {}", m.from, m.msg),
+            TransMessage::ConnectRequest(m) => write!(f, "ConnReq [{}]: {}", m.from, m.msg),
+            TransMessage::SendToServer(m) => write!(f, "C2S [{}]: {}", m.from, m.msg),
+            TransMessage::ChatMessage(m) => write!(f, "Chat [{}]: {}", m.from, m.msg),
+            TransMessage::ForwardChatMessage(m) => write!(f, "FChat [{}]: {}", m.from, m.msg),
+            TransMessage::ResponseImOnline(m) => write!(f, "Online [{}]: {}", m.from, m.msg),
+            TransMessage::PlayerEnterLobby(m) => write!(f, "InLobby [{}]: {}", m.from, m.msg),
         }
     }
 }
@@ -193,9 +178,7 @@ mod message_tests {
         m.push_str(content);
 
         println!("[1] Before construct: {}", m);
-        let msg = Message::from_bytes(
-            Bytes::copy_from_slice(m.as_bytes())
-        ).unwrap();
+        let msg = Message::from_bytes(Bytes::copy_from_slice(m.as_bytes())).unwrap();
         let trans_message = TransMessage::construct(MessageLayer::Default, msg);
         println!("[1] After  construct: {}", trans_message);
 
@@ -206,6 +189,5 @@ mod message_tests {
         let msg = Message::new(from, content);
         let trans_message = TransMessage::construct(MessageLayer::Default, msg);
         println!("[2] After  construct: {}", trans_message);
-
     }
 }

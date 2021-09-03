@@ -144,13 +144,13 @@ impl<'a> System<'a> for ChatroomSystem {
 
                     let trans_message = TransMessage::new(
                         MessageLayer::ChatMessage,
-                        format!("{}", self.local_name),
+                        self.local_name.to_string(),
                         input.text.clone(),
                     );
 
                     net.send(
                         self.server_addr,
-                        trans_message.serialize().unwrap().as_bytes()
+                        trans_message.serialize().unwrap().as_bytes(),
                     );
                     // Reset input text
                     input.text = String::from("");
@@ -168,11 +168,11 @@ impl<'a> System<'a> for ChatroomSystem {
                             TransMessage::Default(m) => {
                                 info!("Received: [SendToServer]");
                                 info!("Unimplemented: {:?}", m);
-                            },
+                            }
                             TransMessage::ResponseImOnline(m) => {
                                 info!("Received: [SendToServer]");
                                 info!("Unimplemented: {:?}", m);
-                            },
+                            }
                             TransMessage::ForwardChatMessage(m) => {
                                 info!("Received: [ForwardChatMessage]");
                                 info!("[Chat] Update chatbox output");
@@ -186,12 +186,12 @@ impl<'a> System<'a> for ChatroomSystem {
                                         output.text = new_total_msg;
                                     }
                                 }
-                            },
+                            }
                             TransMessage::PlayerEnterLobby(m) => {
                                 info!("Received: [PlayerEnterLobby]");
                                 // TODO: create player entity
                                 let num = self.players.len();
-                                let name = String::from(m.from);
+                                let name = m.from;
                                 if self.players.contains(&name) {
                                     continue;
                                 }
@@ -200,16 +200,18 @@ impl<'a> System<'a> for ChatroomSystem {
                                 lazy.exec_mut(move |world| {
                                     load_player(world, name, num);
                                 });
-                            },
+                            }
                             TransMessage::Order(m) => {
                                 info!("Received: [Order]");
                                 info!("Unimplemented: {:?}", m);
-                            },
+                            }
                             _ => debug!("Message is not for me"),
                         }
                     } else {
-                        warn!("Received messages that cannot be processed. {:?}", 
-                            String::from_utf8(payload.clone().to_vec()).unwrap());
+                        warn!(
+                            "Received messages that cannot be processed. {:?}",
+                            String::from_utf8(payload.clone().to_vec()).unwrap()
+                        );
                     };
                 }
                 NetworkSimulationEvent::Connect(addr) => {

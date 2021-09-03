@@ -8,13 +8,13 @@ use amethyst::{
 };
 use log::info;
 
+use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 use crate::{
     resources::{UiHandles, UiType},
     states::lobby::Lobby,
     systems::chat::{ClientInfoResource, ServerInfoResource},
 };
-use shared::utilities::msg::{TransMessage, Message, MessageLayer};
-use super::{credits::CreditsScreen, welcome::WelcomeScreen};
+use shared::utilities::msg::{Message, MessageLayer, TransMessage};
 
 const BUTTON_START: &str = "start";
 const BUTTON_LOAD: &str = "load";
@@ -45,8 +45,8 @@ impl MainMenu {
         let server = world.fetch::<ServerInfoResource>();
         let mut net = world.fetch_mut::<TransportResource>();
         let msg = Message::new(
-            format!("{}", client.name),
-            "I want to connect to the server".to_owned()
+            client.name.to_string(),
+            "I want to connect to the server".to_owned(),
         );
 
         let trans_message = TransMessage::construct(MessageLayer::ConnectRequest, msg);
@@ -54,7 +54,7 @@ impl MainMenu {
         // FIXME: unwrap()
         net.send(
             server.get_addr(),
-            trans_message.serialize().unwrap().as_bytes()
+            trans_message.serialize().unwrap().as_bytes(),
         );
     }
 }

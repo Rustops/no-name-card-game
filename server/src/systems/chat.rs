@@ -1,4 +1,3 @@
-use std::{collections::HashMap, convert::TryInto, net::SocketAddr };
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
@@ -9,8 +8,9 @@ use amethyst::{
     shrev::{EventChannel, ReaderId},
     Result,
 };
-use shared::utilities::msg::{TransMessage, MessageLayer};
 use log::{debug, error, info};
+use shared::utilities::msg::{MessageLayer, TransMessage};
+use std::{collections::HashMap, convert::TryInto, net::SocketAddr};
 
 // const HEARTBEAT_PU: &str = "HEARTBEAT:PU";
 // const HEARTBEAT_TONG: &str = "HEARTBEAT:TONG";
@@ -86,22 +86,24 @@ impl<'a> System<'a> for ChatReceiveSystem {
                             TransMessage::Default(m) => {
                                 info!("Received: [Default]");
                                 info!("Unimplemented: {:?}", m);
-                            },
+                            }
                             TransMessage::ResponseImOnline(m) => {
                                 info!("Received: [ResponseImOnline]");
 
                                 let trans_message = TransMessage::new(
                                     MessageLayer::ResponseImOnline,
                                     m.from,
-                                    m.msg
+                                    m.msg,
                                 );
 
                                 let _v: Vec<_> = self
                                     .connection
                                     .iter()
-                                    .map(|x| net.send(*x, trans_message.serialize().unwrap().as_bytes()))
+                                    .map(|x| {
+                                        net.send(*x, trans_message.serialize().unwrap().as_bytes())
+                                    })
                                     .collect();
-                            },
+                            }
                             TransMessage::ConnectRequest(m) => {
                                 info!("Received: [ConnectRequest]");
                                 self.players.insert(*addr, m.from);
@@ -109,41 +111,37 @@ impl<'a> System<'a> for ChatReceiveSystem {
                                     let trans_message = TransMessage::new(
                                         MessageLayer::PlayerEnterLobby,
                                         name.to_string(),
-                                        "enter lobby".to_string()
+                                        "enter lobby".to_string(),
                                     );
-                                    
+
                                     // info!("[Client::Connect]{}", message);
-                                    self.connection
-                                        .iter()
-                                        .for_each(|s| net.send(
-                                            *s,
-                                            trans_message.serialize().unwrap().as_bytes())
-                                        );
-                                    
+                                    self.connection.iter().for_each(|s| {
+                                        net.send(*s, trans_message.serialize().unwrap().as_bytes())
+                                    });
                                 });
-                            },
+                            }
                             TransMessage::SendToServer(m) => {
                                 info!("Received: [SendToServer]");
                                 info!("Unimplemented: {:?}", m);
-                            },
+                            }
                             TransMessage::ChatMessage(m) => {
                                 info!("Received: [ChatMessage]");
 
                                 let trans_message = TransMessage::new(
                                     MessageLayer::ForwardChatMessage,
                                     m.from,
-                                    m.msg
+                                    m.msg,
                                 );
 
                                 let _v: Vec<_> = self
                                     .connection
                                     .iter()
-                                    .map(|x| net.send(
-                                        *x,
-                                        trans_message.serialize().unwrap().as_bytes())
-                                    ).collect();
+                                    .map(|x| {
+                                        net.send(*x, trans_message.serialize().unwrap().as_bytes())
+                                    })
+                                    .collect();
                                 info!("Sent: [ForwardChatMessage] to all clients");
-                                info!("ForwardChatMessage is {:?}", trans_message);
+                                debug!("ForwardChatMessage is {:?}", trans_message);
                             }
                             _ => debug!("Message is not for me"),
                         }
