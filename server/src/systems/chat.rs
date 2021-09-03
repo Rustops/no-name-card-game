@@ -80,8 +80,7 @@ impl<'a> System<'a> for ChatReceiveSystem {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("{}: {:?}", addr, payload);
-
-                    if let Ok(resp) = serde_json::from_slice::<TransMessage>(&payload) {
+                    if let Ok(resp) = serde_json::from_slice::<TransMessage>(payload) {
                         match resp {
                             TransMessage::Default(m) => {
                                 info!("Received: [Default]");
