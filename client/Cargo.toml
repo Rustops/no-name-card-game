@@ -9,8 +9,11 @@ shared = { path = "../shared" }
 amethyst = {version = "0.15.3", features = ["no-slow-safety-checks"]}
 log = { version = "^0.4", features = ["serde"] }
 structopt = "0.3.22"
-serde = { version = "1.0", features = ["derive"] }
 rand = { version = "0.8.4" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "^1.0"
+serde_derive = "1.0"
+
 
 [features]
 default = ["vulkan"]
