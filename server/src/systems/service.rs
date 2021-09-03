@@ -133,10 +133,12 @@ impl ServiceSystem {
 impl<'a> System<'a> for ServiceSystem {
     type SystemData = (
         Write<'a, TransportResource>,
+        Write<'a, UdpSocketResource>,
         Read<'a, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut net, channel): Self::SystemData) {
+    fn run(&mut self, (mut net, mut udp, channel): Self::SystemData) {
+        let socket = udp.get_mut().unwrap();
         for event in channel.read(&mut self.reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
@@ -148,18 +150,29 @@ impl<'a> System<'a> for ServiceSystem {
                     let ss: Vec<&str> = s.split('-').collect();
 
                     if ss.len() >= 3 && ss[1] == "Connect" && ss[2] == "Request" {
+                        if self.players.contains_key(addr) {
+                            continue;
+                        }
                         self.players.insert(*addr, String::from(ss[0]));
 
-                        self.players.iter().for_each(|(_, name)| {
+                        self.players.iter().for_each(|(s, name)| {
                             let message = format!("{}-Enter-Lobby", name);
                             info!("[Client::Connect]{}", message);
-                            self.connection.iter().for_each(|s| {
-                                info!("[Response] Broadcast!");
-                                net.send(*s, message.as_bytes());
-                                // let _ = socket.connect(s);
-                                // socket.send(message.as_bytes()).unwrap();
-                            });
+                            info!("[Response] Broadcast!");
+                            match socket.connect(s) {
+                                Ok(()) => info!("[UDP] Connect Succeed!"),
+                                Err(e) => info!("[UDP] Connect Failed: {}!", e),
+                            };
+                            match socket.send(message.as_bytes()) {
+                                Ok(_) => info!("[UDP] Send Succeed!"),
+                                Err(e) => info!("[UDP] Send Failed: {}!", e),
+                            }
+                            match socket.send(message.as_bytes()) {
+                                Ok(_) => info!("[UDP] Send Succeed!"),
+                                Err(e) => info!("[UDP] Send Failed: {}!", e),
+                            }
                         });
+
                         continue;
                     }
 

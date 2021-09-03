@@ -1,10 +1,11 @@
+use std::net::{SocketAddr, TcpListener, UdpSocket};
+
 use crate::{resources::Music, systems::chat::ChatroomBundle};
 use amethyst::{
     audio::{AudioBundle, DjSystemDesc},
     core::TransformBundle,
     ecs::{Component, VecStorage},
     input::{InputBundle, StringBindings},
-    network::simulation::udp::UdpNetworkBundle,
     prelude::*,
     renderer::{
         plugins::RenderToWindow, types::DefaultBackend, RenderDebugLines, RenderFlat2D,
@@ -66,13 +67,26 @@ impl Client {
 
         let display_config_path = get_config_dir().join("display.ron");
 
+        let addr = SocketAddr::from(([0, 0, 0, 0], 2000));
+        let listener_addr = SocketAddr::from(([0, 0, 0, 0], 2000));
+
+        let listener = TcpListener::bind(listener_addr)?;
+        listener.set_nonblocking(true)?;
+        let socket = UdpSocket::bind(addr).unwrap();
+        let _ = socket.set_nonblocking(true);
+
         let game_data = GameDataBuilder::default()
             .with_bundle(TransformBundle::new())?
             .with_bundle(InputBundle::<StringBindings>::new())?
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
             .with_bundle(FpsCounterBundle)?
-            .with_bundle(ChatroomBundle::new(server_info, client_info))?
+            .with_bundle(ChatroomBundle::new(
+                server_info,
+                client_info,
+                socket,
+                listener,
+            ))?
             .with_bundle(
                 RenderingBundle::<DefaultBackend>::new()
                     .with_plugin(
@@ -83,7 +97,6 @@ impl Client {
                     .with_plugin(RenderUi::default())
                     .with_plugin(RenderDebugLines::default()), // .with_plugin(RenderFlat2D::default()),
             )?
-            .with_bundle(UdpNetworkBundle::new(None, 2048))?
             .with_system_desc(
                 DjSystemDesc::new(|music: &mut Music| music.music.next()),
                 "dj_system",
