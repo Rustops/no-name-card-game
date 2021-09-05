@@ -1,20 +1,20 @@
 use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down},
-    network::simulation::{udp::UdpSocketResource, TransportResource},
+    network::simulation::TransportResource,
     prelude::*,
     ui::{UiEvent, UiEventType, UiFinder},
     winit::VirtualKeyCode,
 };
 use log::info;
 
+use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 use crate::{
     resources::{UiHandles, UiType},
     states::lobby::Lobby,
     systems::chat::{ClientInfoResource, ServerInfoResource},
 };
-
-use super::{credits::CreditsScreen, welcome::WelcomeScreen};
+use shared::utilities::msg::{Message, MessageLayer, TransMessage};
 
 const BUTTON_START: &str = "start";
 const BUTTON_LOAD: &str = "load";
@@ -43,20 +43,19 @@ impl MainMenu {
         let world = data.world;
         let client = world.fetch::<ClientInfoResource>();
         let server = world.fetch::<ServerInfoResource>();
-        let mut _net = world.fetch_mut::<TransportResource>();
-        let conn_msg = format!("{}-Connect-Request", client.name);
+        let mut net = world.fetch_mut::<TransportResource>();
+        let msg = Message::new(
+            client.name.to_string(),
+            "I want to connect to the server".to_owned(),
+        );
 
-        let mut udp = world.fetch_mut::<UdpSocketResource>();
-        let socket = udp.get_mut().unwrap();
-        match socket.connect(server.get_addr()) {
-            Ok(()) => info!("[UDP] Connect Succeed!"),
-            Err(e) => info!("[UDP] Connect Failed: {}!", e),
-        };
-        match socket.send(conn_msg.as_bytes()) {
-            Ok(_) => info!("[UDP] Send Succeed!"),
-            Err(e) => info!("[UDP] Send Failed: {}!", e),
-        }
-        // net.send(server.get_addr(), conn_msg.as_bytes());
+        let trans_message = TransMessage::construct(MessageLayer::ConnectRequest, msg);
+
+        // FIXME: unwrap()
+        net.send(
+            server.get_addr(),
+            trans_message.serialize().unwrap().as_bytes(),
+        );
     }
 }
 

@@ -21,7 +21,8 @@ use amethyst::{
     shrev::{EventChannel, ReaderId},
     Result,
 };
-use log::{error, info};
+use log::{debug, error, info};
+use shared::utilities::msg::{MessageLayer, TransMessage};
 
 #[derive(Debug)]
 pub struct ServiceBundle {
@@ -138,53 +139,76 @@ impl<'a> System<'a> for ServiceSystem {
     );
 
     fn run(&mut self, (mut net, mut udp, channel): Self::SystemData) {
-        let socket = udp.get_mut().unwrap();
+        let _socket = udp.get_mut().unwrap();
         for event in channel.read(&mut self.reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
                     info!("{}: {:?}", addr, payload);
-                    // let socket = socket.get_mut().unwrap();
-                    // Converting messages to human-readable form
-                    let p = payload.clone().to_vec();
-                    let s = String::from_utf8(p).unwrap();
-                    let ss: Vec<&str> = s.split('-').collect();
+                    if let Ok(resp) = serde_json::from_slice::<TransMessage>(payload) {
+                        match resp {
+                            TransMessage::Default(m) => {
+                                info!("Received: [Default]");
+                                info!("Unimplemented: {:?}", m);
+                            }
+                            TransMessage::ResponseImOnline(m) => {
+                                info!("Received: [ResponseImOnline]");
 
-                    if ss.len() >= 3 && ss[1] == "Connect" && ss[2] == "Request" {
-                        if self.players.contains_key(addr) {
-                            continue;
+                                let trans_message = TransMessage::new(
+                                    MessageLayer::ResponseImOnline,
+                                    m.from,
+                                    m.msg,
+                                );
+
+                                let _v: Vec<_> = self
+                                    .connection
+                                    .iter()
+                                    .map(|x| {
+                                        net.send(*x, trans_message.serialize().unwrap().as_bytes())
+                                    })
+                                    .collect();
+                            }
+                            TransMessage::ConnectRequest(m) => {
+                                info!("Received: [ConnectRequest]");
+                                self.players.insert(*addr, m.from);
+                                self.players.iter().for_each(|(_, name)| {
+                                    let trans_message = TransMessage::new(
+                                        MessageLayer::PlayerEnterLobby,
+                                        name.to_string(),
+                                        "enter lobby".to_string(),
+                                    );
+
+                                    // info!("[Client::Connect]{}", message);
+                                    self.connection.iter().for_each(|s| {
+                                        net.send(*s, trans_message.serialize().unwrap().as_bytes())
+                                    });
+                                });
+                            }
+                            TransMessage::SendToServer(m) => {
+                                info!("Received: [SendToServer]");
+                                info!("Unimplemented: {:?}", m);
+                            }
+                            TransMessage::ChatMessage(m) => {
+                                info!("Received: [ChatMessage]");
+
+                                let trans_message = TransMessage::new(
+                                    MessageLayer::ForwardChatMessage,
+                                    m.from,
+                                    m.msg,
+                                );
+
+                                let _v: Vec<_> = self
+                                    .connection
+                                    .iter()
+                                    .map(|x| {
+                                        net.send(*x, trans_message.serialize().unwrap().as_bytes())
+                                    })
+                                    .collect();
+                                info!("Sent: [ForwardChatMessage] to all clients");
+                                debug!("ForwardChatMessage is {:?}", trans_message);
+                            }
+                            _ => debug!("Message is not for me"),
                         }
-                        self.players.insert(*addr, String::from(ss[0]));
-
-                        self.players.iter().for_each(|(s, name)| {
-                            let message = format!("{}-Enter-Lobby", name);
-                            info!("[Client::Connect]{}", message);
-                            info!("[Response] Broadcast!");
-                            match socket.connect(s) {
-                                Ok(()) => info!("[UDP] Connect Succeed!"),
-                                Err(e) => info!("[UDP] Connect Failed: {}!", e),
-                            };
-                            match socket.send(message.as_bytes()) {
-                                Ok(_) => info!("[UDP] Send Succeed!"),
-                                Err(e) => info!("[UDP] Send Failed: {}!", e),
-                            }
-                            match socket.send(message.as_bytes()) {
-                                Ok(_) => info!("[UDP] Send Succeed!"),
-                                Err(e) => info!("[UDP] Send Failed: {}!", e),
-                            }
-                        });
-
-                        continue;
                     }
-
-                    // In a typical client/server simulation, both the client and the server will
-                    // be exchanging messages at a constant rate. Laminar makes use of this by
-                    // packaging message acks with the next sent message. Therefore, in order for
-                    // reliability to work properly, we'll send a generic "ok" response.
-                    let _v: Vec<_> = self
-                        .connection
-                        .iter()
-                        .map(|x| net.send(*x, payload))
-                        .collect();
 
                     // Check whether the player wants to play the game.
                     if payload.eq(&Bytes::from("Y")) | payload.eq(&Bytes::from("y")) {
