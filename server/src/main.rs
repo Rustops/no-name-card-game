@@ -1,11 +1,10 @@
 use amethyst::{
-    core::frame_limiter::FrameRateLimitStrategy, network::simulation::tcp::TcpNetworkBundle,
-    prelude::*, utils::application_root_dir, Result,
+    core::frame_limiter::FrameRateLimitStrategy, prelude::*, utils::application_root_dir, Result,
 };
-use std::net::{SocketAddr, TcpListener};
+use std::net::{SocketAddr, TcpListener, UdpSocket};
 use std::time::Duration;
 use structopt::StructOpt;
-use systems::chat::ChatReceiveBundle;
+use systems::service::ServiceBundle;
 
 mod systems;
 
@@ -41,10 +40,11 @@ impl Server {
         let listener = TcpListener::bind(listener_addrs)?;
         listener.set_nonblocking(true)?;
 
+        let socket = UdpSocket::bind(listener_addrs)?;
+        socket.set_nonblocking(true)?;
         let assets_dir = application_root_dir()?.join("assets");
-        let game_data = GameDataBuilder::default()
-            .with_bundle(TcpNetworkBundle::new(Some(listener), 2048))?
-            .with_bundle(ChatReceiveBundle)?;
+        let game_data =
+            GameDataBuilder::default().with_bundle(ServiceBundle::new(listener, socket, 2048))?;
 
         let mut game = Application::build(assets_dir, GameState)?
             .with_frame_limit(

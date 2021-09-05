@@ -4,7 +4,15 @@ use amethyst::{
     ecs::{
         DispatcherBuilder, Entity, LazyUpdate, Read, System, SystemData, World, Write, WriteStorage,
     },
-    network::simulation::{NetworkSimulationEvent, NetworkSimulationTime, TransportResource},
+    network::simulation::{
+        tcp::{
+            TcpConnectionListenerSystem, TcpNetworkRecvSystem, TcpNetworkResource,
+            TcpNetworkSendSystem, TcpStreamManagementSystem,
+        },
+        udp::{UdpNetworkRecvSystem, UdpNetworkSendSystem, UdpSocketResource},
+        NetworkSimulationEvent, NetworkSimulationTime, NetworkSimulationTimeSystem,
+        TransportResource,
+    },
     prelude::WorldExt,
     renderer::SpriteSheet,
     shrev::{EventChannel, ReaderId},
@@ -13,7 +21,7 @@ use amethyst::{
 };
 use log::{debug, error, info, warn};
 use shared::msg::{MessageLayer, TransMessage};
-use std::net::SocketAddr;
+use std::net::{SocketAddr, TcpListener, UdpSocket};
 
 use crate::{components::Player, entities::player::load_player, resources::SoundType};
 
@@ -26,19 +34,65 @@ const CLIENT_NAME: &str = "test";
 pub struct ChatroomBundle {
     pub server_info: ServerInfoResource,
     pub client_info: ClientInfoResource,
+    pub socket: Option<UdpSocket>,
+    pub listener: Option<TcpListener>,
 }
 
 impl ChatroomBundle {
-    pub fn new(server_info: ServerInfoResource, client_info: ClientInfoResource) -> Self {
+    pub fn new(
+        server_info: ServerInfoResource,
+        client_info: ClientInfoResource,
+        socket: UdpSocket,
+        listener: TcpListener,
+    ) -> Self {
         Self {
             server_info,
             client_info,
+            socket: Some(socket),
+            listener: Some(listener),
         }
     }
 }
 
 impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
+        builder.add(NetworkSimulationTimeSystem, "simulation_time", &[]);
+
+        builder.add(
+            TcpConnectionListenerSystem,
+            "connection_listener",
+            &["simulation_time"],
+        );
+
+        builder.add(
+            TcpStreamManagementSystem,
+            "stream_management",
+            &["simulation_time"],
+        );
+
+        builder.add(
+            TcpNetworkSendSystem,
+            "tcp_send",
+            &["stream_management", "connection_listener"],
+        );
+
+        builder.add(
+            TcpNetworkRecvSystem,
+            "tcp_recv",
+            &["stream_management", "connection_listener"],
+        );
+
+        world.insert(TcpNetworkResource::new(self.listener, 2048));
+
+        builder.add(
+            UdpNetworkRecvSystem::with_buffer_capacity(2048),
+            "udp_recv",
+            &["simulation_time"],
+        );
+        builder.add(UdpNetworkSendSystem, "udp_send", &["simulation_time"]);
+
+        world.insert(UdpSocketResource::new(self.socket));
+
         world.insert(ServerInfoResource::new(self.server_info.addr));
         world.insert(ClientInfoResource::new(self.client_info.name));
         builder.add(ChatroomSystemDesc.build(world), "chat_system", &[]);
