@@ -195,7 +195,7 @@ impl<'a> System<'a> for ServiceSystem {
 
                                 // tell the player how many players are online right now
                                 self.players.iter().for_each(|(_, c)| {
-                                    let mut s = addr.clone();
+                                    let mut s = *addr;
                                     s.set_port(m.from.port);
                                     let msg = TransMessage::new(
                                         MessageLayer::PlayerEnterLobby,
