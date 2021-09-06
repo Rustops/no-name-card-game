@@ -12,9 +12,12 @@ use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 use crate::{
     resources::{UiHandles, UiType},
     states::lobby::Lobby,
-    systems::chat::{ClientInfoResource, ServerInfoResource},
+    systems::chat::ServerInfoResource,
 };
-use shared::utilities::msg::{Message, MessageLayer, TransMessage};
+use shared::{
+    clientinfo::ClientInfo,
+    utilities::msg::{Message, MessageLayer, TransMessage},
+};
 
 const BUTTON_START: &str = "start";
 const BUTTON_LOAD: &str = "load";
@@ -41,13 +44,10 @@ impl MainMenu {
     /// the server loading the players in the lobby.
     fn init_connection(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         let world = data.world;
-        let client = world.fetch::<ClientInfoResource>();
+        let client = world.fetch_mut::<ClientInfo>().clone();
         let server = world.fetch::<ServerInfoResource>();
         let mut net = world.fetch_mut::<TransportResource>();
-        let msg = Message::new(
-            client.name.to_string(),
-            "I want to connect to the server".to_owned(),
-        );
+        let msg = Message::new(client, "I want to connect to the server".to_owned());
 
         let trans_message = TransMessage::construct(MessageLayer::ConnectRequest, msg);
 

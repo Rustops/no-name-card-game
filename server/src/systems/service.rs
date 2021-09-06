@@ -22,7 +22,10 @@ use amethyst::{
     Result,
 };
 use log::{debug, error, info};
-use shared::utilities::msg::{MessageLayer, TransMessage};
+use shared::{
+    clientinfo::ClientInfo,
+    utilities::msg::{MessageLayer, TransMessage},
+};
 
 const UDP_PORT: u16 = 2000;
 
@@ -116,7 +119,7 @@ impl<'a, 'b> SystemDesc<'a, 'b, ServiceSystem> for ServiceSystemDesc {
 struct ServiceSystem {
     reader: ReaderId<NetworkSimulationEvent>,
     connection: Vec<SocketAddr>,
-    players: HashMap<SocketAddr, String>,
+    players: HashMap<SocketAddr, ClientInfo>,
     online_num: u32,
     game_room: Vec<SocketAddr>,
 }
@@ -172,10 +175,10 @@ impl<'a> System<'a> for ServiceSystem {
                             TransMessage::ConnectRequest(m) => {
                                 info!("Received: [ConnectRequest]");
                                 self.players.insert(*addr, m.from);
-                                self.players.iter().for_each(|(_, name)| {
+                                self.players.iter().for_each(|(_, from)| {
                                     let trans_message = TransMessage::new(
                                         MessageLayer::PlayerEnterLobby,
-                                        name.to_string(),
+                                        from.clone(),
                                         "enter lobby".to_string(),
                                     );
 

@@ -15,6 +15,7 @@ use amethyst::{
     utils::fps_counter::FpsCounterBundle,
     Result,
 };
+use shared::clientinfo::ClientInfo;
 use states::loading::LoadingState;
 use structopt::StructOpt;
 
@@ -26,10 +27,7 @@ mod states;
 mod systems;
 mod utilities;
 
-use systems::{
-    chat::{ClientInfoResource, ServerInfoResource},
-    play_sfx::PlaySfxSystem,
-};
+use systems::{chat::ServerInfoResource, play_sfx::PlaySfxSystem};
 use utilities::{
     files::{get_assets_dir, get_config_dir},
     startup::start_game,
@@ -65,7 +63,7 @@ impl Client {
 
     pub fn run(self) -> Result<()> {
         let server_info = ServerInfoResource { addr: self.url };
-        let client_info = ClientInfoResource {
+        let client_info = ClientInfo {
             name: self.name,
             port: self.port,
         };

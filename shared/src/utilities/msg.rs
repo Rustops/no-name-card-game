@@ -2,6 +2,8 @@ use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use std::fmt::{self, Display, Formatter};
 
+use crate::clientinfo::ClientInfo;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub enum MessageLayer {
     Default,
@@ -23,7 +25,7 @@ pub enum MessageLayer {
     ChatMessage,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub enum TransMessage {
     /// General Message
     Default(Message),
@@ -48,9 +50,9 @@ pub enum TransMessage {
     ChatMessage(Message),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Message {
-    pub from: String,
+    pub from: ClientInfo,
     /// Message content
     /// NOTE: For more complex message content, consider use the MessageBody structure
     pub msg: String,
@@ -83,7 +85,7 @@ pub type Error = MessageError;
 pub type Result<T> = std::result::Result<T, MessageError>;
 
 impl TransMessage {
-    pub fn new(layer: MessageLayer, from: String, msg: String) -> TransMessage {
+    pub fn new(layer: MessageLayer, from: ClientInfo, msg: String) -> TransMessage {
         let msg = Message::new(from, msg);
         TransMessage::construct(layer, msg)
     }
@@ -107,7 +109,7 @@ impl TransMessage {
         serde_json::to_string(&self).map_err::<Error, _>(Into::into)
     }
 
-    pub fn update_layer(&mut self, layer: MessageLayer) -> Self {
+    pub fn update_layer(&self, layer: MessageLayer) -> Self {
         let m = match self {
             TransMessage::Default(m) => m,
             TransMessage::BroadcastToClients(m) => m,
@@ -119,15 +121,14 @@ impl TransMessage {
             TransMessage::ResponseImOnline(m) => m,
             TransMessage::PlayerEnterLobby(m) => m,
         };
-        let msg = Message::new(m.from.clone(), m.msg.clone());
 
         // Fixed msg, but change layer
-        TransMessage::construct(layer, msg)
+        TransMessage::construct(layer, m.clone())
     }
 }
 
 impl Message {
-    pub fn new(from: String, msg: String) -> Message {
+    pub fn new(from: ClientInfo, msg: String) -> Message {
         Message { from, msg }
     }
 
@@ -143,7 +144,7 @@ impl Message {
             // Due to the use of-separation, there will be a situation with a length of 3 or more
             // which can be simply dealt with for the time being, and this part can be optimized later.
             Ok(Message {
-                from: msg[0].to_string(),
+                from: msg[0].to_string().into(),
                 msg: msg[1].to_string(),
             })
         }
@@ -171,7 +172,8 @@ mod message_tests {
     use super::*;
     #[test]
     fn test_construct_msg() {
-        let mut m = "Client".to_owned();
+        let mut m = "Client:9999".to_owned();
+
         let separator = "-";
         let content = "Broadcast content";
         m.push_str(separator);
@@ -182,11 +184,11 @@ mod message_tests {
         let trans_message = TransMessage::construct(MessageLayer::Default, msg);
         println!("[1] After  construct: {}", trans_message);
 
-        let from = "Client".to_owned();
+        let from = "Client:9999".to_owned();
         let content = "Broadcast content".to_owned();
 
         println!("[2] Before construct: {}", m);
-        let msg = Message::new(from, content);
+        let msg = Message::new(from.into(), content);
         let trans_message = TransMessage::construct(MessageLayer::Default, msg);
         println!("[2] After  construct: {}", trans_message);
     }
