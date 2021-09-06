@@ -24,6 +24,8 @@ use amethyst::{
 use log::{debug, error, info};
 use shared::utilities::msg::{MessageLayer, TransMessage};
 
+const UDP_PORT: u16 = 2000;
+
 #[derive(Debug)]
 pub struct ServiceBundle {
     listener: Option<TcpListener>,
@@ -138,8 +140,8 @@ impl<'a> System<'a> for ServiceSystem {
         Read<'a, EventChannel<NetworkSimulationEvent>>,
     );
 
-    fn run(&mut self, (mut net, mut udp, channel): Self::SystemData) {
-        let _socket = udp.get_mut().unwrap();
+    fn run(&mut self, (mut _net, mut udp, channel): Self::SystemData) {
+        let socket = udp.get_mut().expect("Get socker failed.");
         for event in channel.read(&mut self.reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
@@ -150,22 +152,22 @@ impl<'a> System<'a> for ServiceSystem {
                                 info!("Received: [Default]");
                                 info!("Unimplemented: {:?}", m);
                             }
-                            TransMessage::ResponseImOnline(m) => {
+                            TransMessage::ResponseImOnline(_m) => {
                                 info!("Received: [ResponseImOnline]");
 
-                                let trans_message = TransMessage::new(
-                                    MessageLayer::ResponseImOnline,
-                                    m.from,
-                                    m.msg,
-                                );
+                                // let trans_message = TransMessage::new(
+                                //     MessageLayer::ResponseImOnline,
+                                //     m.from,
+                                //     m.msg,
+                                // );
 
-                                let _v: Vec<_> = self
-                                    .connection
-                                    .iter()
-                                    .map(|x| {
-                                        net.send(*x, trans_message.serialize().unwrap().as_bytes())
-                                    })
-                                    .collect();
+                                // let _v: Vec<_> = self
+                                //     .connection
+                                //     .iter()
+                                //     .map(|x| {
+                                //         net.send(*x, trans_message.serialize().unwrap().as_bytes())
+                                //     })
+                                //     .collect();
                             }
                             TransMessage::ConnectRequest(m) => {
                                 info!("Received: [ConnectRequest]");
@@ -177,9 +179,21 @@ impl<'a> System<'a> for ServiceSystem {
                                         "enter lobby".to_string(),
                                     );
 
-                                    // info!("[Client::Connect]{}", message);
                                     self.connection.iter().for_each(|s| {
-                                        net.send(*s, trans_message.serialize().unwrap().as_bytes())
+                                        let mut s = s.clone();
+                                        s.set_port(UDP_PORT);
+                                        match socket.connect(s) {
+                                            Ok(_) => info!("Connecting to the client successfully"),
+                                            Err(e) => {
+                                                info!("Connecting to the client failed: {}", e)
+                                            }
+                                        }
+                                        match socket
+                                            .send(trans_message.serialize().unwrap().as_bytes())
+                                        {
+                                            Ok(_) => info!("Send to the client successfully"),
+                                            Err(e) => info!("Send to the client failed: {}", e),
+                                        }
                                     });
                                 });
                             }
@@ -200,7 +214,20 @@ impl<'a> System<'a> for ServiceSystem {
                                     .connection
                                     .iter()
                                     .map(|x| {
-                                        net.send(*x, trans_message.serialize().unwrap().as_bytes())
+                                        let mut s = x.clone();
+                                        s.set_port(UDP_PORT);
+                                        match socket.connect(s) {
+                                            Ok(_) => info!("Connecting to the client successfully"),
+                                            Err(e) => {
+                                                info!("Connecting to the client failed: {}", e)
+                                            }
+                                        }
+                                        match socket
+                                            .send(trans_message.serialize().unwrap().as_bytes())
+                                        {
+                                            Ok(_) => info!("Send to the client successfully"),
+                                            Err(e) => info!("Send to the client failed: {}", e),
+                                        }
                                     })
                                     .collect();
                                 info!("Sent: [ForwardChatMessage] to all clients");

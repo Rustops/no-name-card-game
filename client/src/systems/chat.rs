@@ -29,6 +29,7 @@ use super::play_sfx::SoundEvent;
 
 const SERVER_ADDRESS: &str = "127.0.0.1:6666";
 const CLIENT_NAME: &str = "test";
+const UDP_PORT: u16 = 2000;
 
 #[derive(Debug, Default)]
 pub struct ChatroomBundle {
@@ -94,7 +95,10 @@ impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
         world.insert(UdpSocketResource::new(self.socket));
 
         world.insert(ServerInfoResource::new(self.server_info.addr));
-        world.insert(ClientInfoResource::new(self.client_info.name));
+        world.insert(ClientInfoResource::new(
+            self.client_info.name,
+            self.client_info.port,
+        ));
         builder.add(ChatroomSystemDesc.build(world), "chat_system", &[]);
         Ok(())
     }
@@ -316,11 +320,12 @@ impl Default for ServerInfoResource {
 #[derive(Debug)]
 pub struct ClientInfoResource {
     pub name: String,
+    pub port: u16,
 }
 
 impl ClientInfoResource {
-    pub fn new(name: String) -> Self {
-        Self { name }
+    pub fn new(name: String, port: u16) -> Self {
+        Self { name, port }
     }
 }
 
@@ -328,6 +333,7 @@ impl Default for ClientInfoResource {
     fn default() -> Self {
         Self {
             name: CLIENT_NAME.to_string(),
+            port: UDP_PORT,
         }
     }
 }

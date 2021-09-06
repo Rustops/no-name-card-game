@@ -53,6 +53,9 @@ pub struct Client {
 
     #[structopt(long, default_value = "client")]
     pub name: String,
+
+    #[structopt(long, default_value = "2000")]
+    pub port: u16,
 }
 
 impl Client {
@@ -62,13 +65,16 @@ impl Client {
 
     pub fn run(self) -> Result<()> {
         let server_info = ServerInfoResource { addr: self.url };
-        let client_info = ClientInfoResource { name: self.name };
+        let client_info = ClientInfoResource {
+            name: self.name,
+            port: self.port,
+        };
         amethyst::start_logger(Default::default());
 
         let display_config_path = get_config_dir().join("display.ron");
 
-        let addr = SocketAddr::from(([0, 0, 0, 0], 2000));
-        let listener_addr = SocketAddr::from(([0, 0, 0, 0], 2000));
+        let addr = SocketAddr::from(([0, 0, 0, 0], self.port));
+        let listener_addr = SocketAddr::from(([0, 0, 0, 0], self.port));
 
         let listener = TcpListener::bind(listener_addr)?;
         listener.set_nonblocking(true)?;
