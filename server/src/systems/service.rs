@@ -7,16 +7,13 @@ use std::{
 use amethyst::{
     core::{bundle::SystemBundle, SystemDesc},
     ecs::{DispatcherBuilder, Read, System, SystemData, World, Write},
-    network::{
-        simulation::{
-            tcp::{
-                TcpConnectionListenerSystem, TcpNetworkRecvSystem, TcpNetworkResource,
-                TcpNetworkSendSystem, TcpStreamManagementSystem,
-            },
-            udp::{UdpNetworkRecvSystem, UdpNetworkSendSystem, UdpSocketResource},
-            NetworkSimulationEvent, NetworkSimulationTimeSystem, TransportResource,
+    network::simulation::{
+        tcp::{
+            TcpConnectionListenerSystem, TcpNetworkRecvSystem, TcpNetworkResource,
+            TcpNetworkSendSystem, TcpStreamManagementSystem,
         },
-        Bytes,
+        udp::{UdpNetworkRecvSystem, UdpNetworkSendSystem, UdpSocketResource},
+        NetworkSimulationEvent, NetworkSimulationTimeSystem, TransportResource,
     },
     shrev::{EventChannel, ReaderId},
     Result,
@@ -26,8 +23,6 @@ use shared::{
     clientinfo::ClientInfo,
     utilities::msg::{MessageLayer, TransMessage},
 };
-
-const UDP_PORT: u16 = 2000;
 
 #[derive(Debug)]
 pub struct ServiceBundle {
@@ -121,7 +116,6 @@ struct ServiceSystem {
     connection: Vec<SocketAddr>,
     players: HashMap<SocketAddr, ClientInfo>,
     online_num: u32,
-    game_room: Vec<SocketAddr>,
 }
 
 impl ServiceSystem {
@@ -131,7 +125,6 @@ impl ServiceSystem {
             connection: Vec::new(),
             players: HashMap::default(),
             online_num: 0,
-            game_room: Vec::new(),
         }
     }
 }
@@ -174,30 +167,49 @@ impl<'a> System<'a> for ServiceSystem {
                             }
                             TransMessage::ConnectRequest(m) => {
                                 info!("Received: [ConnectRequest]");
-                                self.players.insert(*addr, m.from);
-                                self.players.iter().for_each(|(_, from)| {
-                                    let trans_message = TransMessage::new(
-                                        MessageLayer::PlayerEnterLobby,
-                                        from.clone(),
-                                        "enter lobby".to_string(),
-                                    );
+                                self.players.insert(*addr, m.from.clone());
 
-                                    self.connection.iter().for_each(|s| {
+                                // tell all other players that a new player has joined the game
+                                self.players
+                                    .iter()
+                                    .skip_while(|(s, c)| *s == addr && **c == m.from)
+                                    .for_each(|(s, c)| {
+                                        let msg = TransMessage::new(
+                                            MessageLayer::PlayerEnterLobby,
+                                            c.clone(),
+                                            "enter lobby".to_string(),
+                                        );
                                         let mut s = *s;
-                                        s.set_port(UDP_PORT);
+                                        s.set_port(c.port);
                                         match socket.connect(s) {
                                             Ok(_) => info!("Connecting to the client successfully"),
                                             Err(e) => {
                                                 info!("Connecting to the client failed: {}", e)
                                             }
                                         }
-                                        match socket
-                                            .send(trans_message.serialize().unwrap().as_bytes())
-                                        {
+                                        match socket.send(msg.serialize().unwrap().as_bytes()) {
                                             Ok(_) => info!("Send to the client successfully"),
                                             Err(e) => info!("Send to the client failed: {}", e),
                                         }
                                     });
+
+                                // tell the player how many players are online right now
+                                self.players.iter().for_each(|(_, c)| {
+                                    let mut s = addr.clone();
+                                    s.set_port(m.from.port);
+                                    let msg = TransMessage::new(
+                                        MessageLayer::PlayerEnterLobby,
+                                        c.clone(),
+                                        "enter lobby".to_string(),
+                                    );
+                                    match socket.connect(s) {
+                                        Ok(_) => info!("Connecting to the client successfully"),
+                                        Err(e) => info!("Connecting to the client failed: {}", e),
+                                    }
+                                    match socket.send(msg.serialize().unwrap().as_bytes()) {
+                                        Ok(_) => info!("Send to the client successfully"),
+                                        Err(e) => info!("Send to the client failed: {}", e),
+                                    }
                                 });
                             }
                             TransMessage::SendToServer(m) => {
@@ -214,11 +226,11 @@ impl<'a> System<'a> for ServiceSystem {
                                 );
 
                                 let _v: Vec<_> = self
-                                    .connection
+                                    .players
                                     .iter()
-                                    .map(|x| {
-                                        let mut s = *x;
-                                        s.set_port(UDP_PORT);
+                                    .map(|(s, c)| {
+                                        let mut s = *s;
+                                        s.set_port(c.port);
                                         match socket.connect(s) {
                                             Ok(_) => info!("Connecting to the client successfully"),
                                             Err(e) => {
@@ -239,41 +251,16 @@ impl<'a> System<'a> for ServiceSystem {
                             _ => debug!("Message is not for me"),
                         }
                     }
-
-                    // Check whether the player wants to play the game.
-                    if payload.eq(&Bytes::from("Y")) | payload.eq(&Bytes::from("y")) {
-                        self.game_room.push(*addr);
-                        info!("{} Confirm to play, total: {:?}", addr, self.game_room);
-
-                        // if self.game_room.len() == 2 {
-                        //     info!("Players Enough");
-                        //     let _v: Vec<_> = self
-                        //         .game_room
-                        //         .iter()
-                        //         .map(|x| net.send(*x, START_GAME.as_bytes()))
-                        //         .collect();
-
-                        //     // Rest game_room
-                        //     self.game_room.clear();
-                        // }
-                    }
                 }
                 NetworkSimulationEvent::Connect(addr) => {
                     info!("New client connection: {}", addr);
                     self.connection.push(*addr);
                     self.online_num = self.connection.len().try_into().unwrap();
                     info!("Online player num: {:?}", self.online_num);
-
-                    if self.online_num >= 2 {
-                        info!("Online players >= 2, send msg to players");
-                        // let _v: Vec<_> = self
-                        //     .connection
-                        //     .iter()
-                        //     .map(|x| net.send(*x, ENOUGH_PLAYER.as_bytes()))
-                        //     .collect();
-                    }
                 }
                 NetworkSimulationEvent::Disconnect(addr) => {
+                    // TODO: tell all other players
+                    // should tell other players that a player has quit and delete the entity at the same time
                     info!("Client Disconnected: {}", addr);
                     let index = self.connection.iter().position(|x| *x == *addr).unwrap();
                     self.connection.remove(index);
