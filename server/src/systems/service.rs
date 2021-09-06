@@ -180,7 +180,7 @@ impl<'a> System<'a> for ServiceSystem {
                                     );
 
                                     self.connection.iter().for_each(|s| {
-                                        let mut s = s.clone();
+                                        let mut s = *s;
                                         s.set_port(UDP_PORT);
                                         match socket.connect(s) {
                                             Ok(_) => info!("Connecting to the client successfully"),
@@ -214,7 +214,7 @@ impl<'a> System<'a> for ServiceSystem {
                                     .connection
                                     .iter()
                                     .map(|x| {
-                                        let mut s = x.clone();
+                                        let mut s = *x;
                                         s.set_port(UDP_PORT);
                                         match socket.connect(s) {
                                             Ok(_) => info!("Connecting to the client successfully"),
