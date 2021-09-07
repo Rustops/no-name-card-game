@@ -58,6 +58,7 @@ pub enum MessageType {
 pub enum MessageError {
     FromBytesError,
     SerdeJsonError,
+    AmethystError,
 }
 
 impl From<serde_json::Error> for MessageError {

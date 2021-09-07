@@ -17,7 +17,7 @@ use amethyst::{
     shrev::{EventChannel, ReaderId},
     Result,
 };
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use shared::{
     clientinfo::ClientInfo,
     msg::MessageType,
@@ -127,6 +127,70 @@ impl ServiceSystem {
             online_num: 0,
         }
     }
+
+    pub fn add_players(&mut self, addr: SocketAddr, c: ClientInfo) {
+        self.players.insert(addr, c);
+    }
+
+    // Tell the new_player how many players are online right now
+    // Target is [new_player]
+    pub fn sync_remaining_players(
+        &self,
+        socket: &mut UdpSocket,
+        new_addr: &SocketAddr,
+        from: &ClientInfo,
+    ) {
+        self.players.iter().for_each(|(_, c)| {
+            let msg = TransMessage::new(
+                MessageLayer::Connection,
+                c.clone(),
+                MessageType::EnterLobby,
+                "enter lobby".to_string(),
+            );
+
+            debug!(
+                "Tell the player:[{}] that [{}] is in the lobby.",
+                from.name, c.name
+            );
+            send_message(socket, &new_addr, from, &msg);
+        });
+    }
+
+    pub fn load_player_himself(
+        &self,
+        socket: &mut UdpSocket,
+        new_addr: &SocketAddr,
+        from: &ClientInfo,
+    ) {
+        let msg = TransMessage::new(
+            MessageLayer::Connection,
+            from.clone(),
+            MessageType::EnterLobby,
+            "enter lobby".to_string(),
+        );
+
+        info!("Load the player himself:[{}]", from.name);
+        send_message(socket, &new_addr, from, &msg);
+    }
+
+    // Tell all other players that a new player has joined the game
+    // Target is [other_players]
+    pub fn broadcast_to_others(&self, socket: &mut UdpSocket, from: &ClientInfo) {
+        self.players.iter().for_each(|(s, c)| {
+            let msg = TransMessage::new(
+                MessageLayer::Connection,
+                from.clone(),
+                MessageType::EnterLobby,
+                "enter lobby".to_string(),
+            );
+
+            debug!(
+                "Tell the player:[{}] that [{}] enter lobby.",
+                c.name, from.name
+            );
+            send_message(socket, &s, c, &msg);
+        });
+    }
 }
 
 impl<'a> System<'a> for ServiceSystem {
@@ -141,94 +205,22 @@ impl<'a> System<'a> for ServiceSystem {
         for event in channel.read(&mut self.reader) {
             match event {
                 NetworkSimulationEvent::Message(addr, payload) => {
-                    info!("{}: {:?}", addr, payload);
+                    info!("[Message] {}: {:?}", addr, payload);
+                    info!("players {:?}", self.players);
                     if let Ok(resp) = serde_json::from_slice::<TransMessage>(payload) {
                         match resp {
                             TransMessage::Connection(m) => {
                                 info!("Received: [ConnectRequest]");
-                                // tell the player how many players are online right now
-                                self.players.iter().for_each(|(_, c)| {
-                                    let mut s = *addr;
-                                    s.set_port(m.from.port);
-                                    let msg = TransMessage::new(
-                                        MessageLayer::Connection,
-                                        c.clone(),
-                                        MessageType::EnterLobby,
-                                        "enter lobby".to_string(),
-                                    );
-                                    info!(
-                                        "Tell the player:[{}] that [{}] is in the game lobby.",
-                                        m.from.name, c.name
-                                    );
-                                    // TODO: Optimiz the handling of socket
-                                    match socket.connect(s) {
-                                        Ok(_) => info!(
-                                            "Connecting to the client[{}] successfully",
-                                            c.name
-                                        ),
-                                        Err(e) => info!("Connecting to the client failed: {}", e),
-                                    }
-                                    // TODO: Optimiz the handling of socket
-                                    match socket.send(msg.serialize().unwrap().as_bytes()) {
-                                        Ok(_) => {
-                                            info!("Send to the client[{}] successfully", c.name)
-                                        }
-                                        Err(e) => info!("Send to the client failed: {}", e),
-                                    }
-                                });
 
-                                // tell all other players that a new player has joined the game
-                                self.players.iter().for_each(|(s, c)| {
-                                    let msg = TransMessage::new(
-                                        MessageLayer::Connection,
-                                        m.from.clone(),
-                                        MessageType::EnterLobby,
-                                        "enter lobby".to_string(),
-                                    );
-                                    let mut s = *s;
-                                    s.set_port(c.port);
-                                    info!(
-                                        "Tell the player:[{}] that [{}] enter lobby.",
-                                        c.name, m.from.name
-                                    );
-                                    match socket.connect(s) {
-                                        Ok(_) => info!(
-                                            "Connecting to the client[{}] successfully",
-                                            c.name
-                                        ),
-                                        Err(e) => info!("Connecting to the client failed: {}", e),
-                                    }
-                                    match socket.send(msg.serialize().unwrap().as_bytes()) {
-                                        Ok(_) => {
-                                            info!("Send to the client[{}] successfully", c.name)
-                                        }
-                                        Err(e) => info!("Send to the client failed: {}", e),
-                                    }
-                                });
-
-                                self.players.insert(*addr, m.from.clone());
-                                // players load himself
-                                let mut s = *addr;
-                                s.set_port(m.from.port);
-                                let msg = TransMessage::new(
-                                    MessageLayer::Connection,
-                                    m.from.clone(),
-                                    MessageType::EnterLobby,
-                                    "enter lobby".to_string(),
-                                );
-                                match socket.connect(s) {
-                                    Ok(_) => info!(
-                                        "Connecting to the client[{}] successfully",
-                                        m.from.name
-                                    ),
-                                    Err(e) => info!("Connecting to the client failed: {}", e),
-                                }
-                                match socket.send(msg.serialize().unwrap().as_bytes()) {
-                                    Ok(_) => {
-                                        info!("Send to the client[{}] successfully", m.from.name)
-                                    }
-                                    Err(e) => info!("Send to the client failed: {}", e),
-                                }
+                                // Tell others the new_player came in
+                                self.broadcast_to_others(socket, &m.from);
+                                info!("Succeed: [Broadcast2Others]");
+                                // Tell the new_player how many players are online right now
+                                // NOTE: Include himself right now
+                                self.sync_remaining_players(socket, addr, &m.from);
+                                self.add_players(*addr, m.from.clone());
+                                self.load_player_himself(socket, addr, &m.from);
+                                info!("Succeed: [SyncOthers]");
                             }
                             TransMessage::System(_) => todo!(),
                             TransMessage::Lobby(_) => todo!(),
@@ -242,26 +234,10 @@ impl<'a> System<'a> for ServiceSystem {
                                     m.msg,
                                 );
 
-                                let _v: Vec<_> = self
-                                    .players
+                                self.players
                                     .iter()
-                                    .map(|(s, c)| {
-                                        let mut s = *s;
-                                        s.set_port(c.port);
-                                        match socket.connect(s) {
-                                            Ok(_) => info!("Connecting to the client successfully"),
-                                            Err(e) => {
-                                                info!("Connecting to the client failed: {}", e)
-                                            }
-                                        }
-                                        match socket
-                                            .send(trans_message.serialize().unwrap().as_bytes())
-                                        {
-                                            Ok(_) => info!("Send to the client successfully"),
-                                            Err(e) => info!("Send to the client failed: {}", e),
-                                        }
-                                    })
-                                    .collect();
+                                    .for_each(|(s, c)| send_message(socket, s, c, &trans_message));
+
                                 info!("Sent: [ForwardChatMessage] to all clients");
                                 debug!("ForwardChatMessage is {:?}", trans_message);
                             }
@@ -312,5 +288,24 @@ impl<'a> System<'a> for ServiceSystem {
                 _ => {}
             }
         }
+    }
+}
+
+pub fn send_message(
+    socket: &mut UdpSocket,
+    addr: &SocketAddr,
+    from: &ClientInfo,
+    trans_msg: &TransMessage,
+) {
+    let mut s = *addr;
+    s.set_port(from.port);
+
+    match socket.connect(s) {
+        Ok(_) => debug!("Connecting to the client[{}] successfully", addr),
+        Err(e) => warn!("Connecting to the client failed: {}, add is {:?}", e, addr),
+    }
+    match socket.send(trans_msg.serialize().unwrap().as_bytes()) {
+        Ok(_) => debug!("Send to the client[{}] successfully", addr),
+        Err(e) => warn!("Send to the client failed: {}, add is {:?}", e, addr),
     }
 }
