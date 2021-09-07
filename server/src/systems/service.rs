@@ -282,7 +282,7 @@ impl<'a> System<'a> for ServiceSystem {
                     self.online_num = self.connection.len() as u32;
                     self.players.remove(addr);
 
-                    if self.players.len() > 0 {
+                    if !self.players.is_empty() {
                         // tell other players that a player has quit the game
                         self.players.iter().for_each(|(s, c)| {
                             let mut s = *s;
