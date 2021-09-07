@@ -10,6 +10,7 @@ pub enum Avatar {
     Flandre,
     Kanako,
     Kokoro,
+    Background,
 }
 
 impl Default for Avatar {

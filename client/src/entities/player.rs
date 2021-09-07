@@ -18,6 +18,29 @@ pub fn load_player(world: &mut World, name: String, num: usize) {
     };
     log::info!("[Load::Avater] {:?}", avater);
 
+    let background_asset = {
+        let assets = world.read_resource::<Assets>();
+        assets.get_avatar(Avatar::Background)
+    };
+
+    let background_image = UiImage::Texture(background_asset);
+    let background_transfrom = UiTransform::new(
+        format!("avater_{}", name),
+        Anchor::Middle,
+        Anchor::Middle,
+        -300. + num as f32 * 200.,
+        30.,
+        130.,
+        150.,
+        250.,
+    );
+
+    world
+        .create_entity()
+        .with(background_image)
+        .with(background_transfrom)
+        .build();
+
     let player = Player::new(
         name.clone(),
         PlayerState::Chatting,
@@ -40,10 +63,10 @@ pub fn load_player(world: &mut World, name: String, num: usize) {
         Anchor::Middle,
         Anchor::Middle,
         -300. + num as f32 * 200.,
-        32.,
+        60.,
         200.,
         145.,
-        98.,
+        145.,
     );
     log::info!("[Load::UiTransform] {:?}", ui_transfrom);
 
