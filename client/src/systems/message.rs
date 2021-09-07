@@ -204,6 +204,7 @@ impl<'a> System<'a> for MessageSystem {
                     let trans_message = TransMessage::new(
                         MessageLayer::Chat,
                         self.client_info.clone(),
+                        shared::msg::MessageType::Chat,
                         input.text.clone(),
                     );
 

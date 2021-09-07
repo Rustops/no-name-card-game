@@ -47,7 +47,11 @@ impl MainMenu {
         let client = world.fetch_mut::<ClientInfo>().clone();
         let server = world.fetch::<ServerInfoResource>();
         let mut net = world.fetch_mut::<TransportResource>();
-        let msg = Message::new(client, "I want to connect to the server".to_owned());
+        let msg = Message::new(
+            client,
+            shared::msg::MessageType::EnterLobby,
+            "I want to connect to the server".to_owned(),
+        );
 
         let trans_message = TransMessage::construct(MessageLayer::Connection, msg);
 

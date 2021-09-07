@@ -21,6 +21,7 @@ use amethyst::{
 use log::{debug, error, info};
 use shared::{
     clientinfo::ClientInfo,
+    msg::MessageType,
     utilities::msg::{MessageLayer, TransMessage},
 };
 
@@ -156,6 +157,7 @@ impl<'a> System<'a> for ServiceSystem {
                                         let msg = TransMessage::new(
                                             MessageLayer::Connection,
                                             c.clone(),
+                                            MessageType::EnterLobby,
                                             "enter lobby".to_string(),
                                         );
                                         let mut s = *s;
@@ -179,6 +181,7 @@ impl<'a> System<'a> for ServiceSystem {
                                     let msg = TransMessage::new(
                                         MessageLayer::Connection,
                                         c.clone(),
+                                        MessageType::EnterLobby,
                                         "enter lobby".to_string(),
                                     );
                                     match socket.connect(s) {
@@ -196,8 +199,12 @@ impl<'a> System<'a> for ServiceSystem {
                             TransMessage::Chat(m) => {
                                 info!("Received: [ChatMessage]");
 
-                                let trans_message =
-                                    TransMessage::new(MessageLayer::Chat, m.from, m.msg);
+                                let trans_message = TransMessage::new(
+                                    MessageLayer::Chat,
+                                    m.from,
+                                    MessageType::Chat,
+                                    m.msg,
+                                );
 
                                 let _v: Vec<_> = self
                                     .players
@@ -241,7 +248,6 @@ impl<'a> System<'a> for ServiceSystem {
                     self.online_num = self.connection.len().try_into().unwrap();
                     self.players.remove(addr);
                     info!("Online player num: {:?}", self.online_num);
-                    
                 }
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);
