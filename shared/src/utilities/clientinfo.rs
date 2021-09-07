@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 const CLIENT_NAME: &str = "test";
 const UDP_PORT: u16 = 2000;
 
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct ClientInfo {
     pub name: String,
     pub port: u16,

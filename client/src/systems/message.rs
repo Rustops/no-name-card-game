@@ -22,7 +22,7 @@ use amethyst::{
 use log::{error, info, warn};
 use shared::{
     clientinfo::ClientInfo,
-    msg::{MessageLayer, TransMessage},
+    msg::{MessageLayer, MessageType, TransMessage},
 };
 use std::net::{SocketAddr, TcpListener, UdpSocket};
 
@@ -226,17 +226,30 @@ impl<'a> System<'a> for MessageSystem {
                         self.find_ui_elements(&ui_finder);
                         match resp {
                             TransMessage::Connection(m) => {
-                                info!("Received: [PlayerEnterLobby]");
-                                let num = self.players.len();
-                                let client = m.from;
-                                if self.players.contains(&client) {
-                                    continue;
+                                if m.msg_type == MessageType::EnterLobby {
+                                    info!("Received: [PlayerEnterLobby]");
+                                    let num = self.players.len();
+                                    let client = m.from;
+                                    if self.players.contains(&client) {
+                                        continue;
+                                    }
+                                    self.players.push(client.clone());
+                                    log::info!("[Chat] Prepare loading player");
+                                    lazy.exec_mut(move |world| {
+                                        load_player(world, client.name, num);
+                                    });
+                                } else if m.msg_type == MessageType::Exit {
+                                    info!("Received: [PlayerExitGame]");
+                                    let client = m.from;
+                                    if self.players.contains(&client) {
+                                        let x = self
+                                            .players
+                                            .binary_search(&client)
+                                            .unwrap_or_else(|x| x);
+                                        self.players.remove(x);
+                                        // TODO: Remove player entity
+                                    }
                                 }
-                                self.players.push(client.clone());
-                                log::info!("[Chat] Prepare loading player");
-                                lazy.exec_mut(move |world| {
-                                    load_player(world, client.name, num);
-                                });
                             }
                             TransMessage::System(_) => todo!(),
                             TransMessage::Lobby(_) => todo!(),

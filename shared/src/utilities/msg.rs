@@ -35,9 +35,9 @@ pub struct Message {
     pub msg: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq)]
 pub enum MessageType {
-    ExitLobby,
+    Exit,
     EnterLobby,
     Prepare,
     CancelPrepare,
