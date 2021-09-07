@@ -1,6 +1,6 @@
 use std::net::{SocketAddr, TcpListener, UdpSocket};
 
-use crate::{resources::Music, systems::chat::ChatroomBundle};
+use crate::{resources::Music, systems::message::MessageBundle};
 use amethyst::{
     audio::{AudioBundle, DjSystemDesc},
     core::TransformBundle,
@@ -27,7 +27,7 @@ mod states;
 mod systems;
 mod utilities;
 
-use systems::{chat::ServerInfoResource, play_sfx::PlaySfxSystem};
+use systems::{message::ServerInfoResource, play_sfx::PlaySfxSystem};
 use utilities::{
     files::{get_assets_dir, get_config_dir},
     startup::start_game,
@@ -85,7 +85,7 @@ impl Client {
             .with_bundle(UiBundle::<StringBindings>::new())?
             .with_bundle(AudioBundle::default())?
             .with_bundle(FpsCounterBundle)?
-            .with_bundle(ChatroomBundle::new(
+            .with_bundle(MessageBundle::new(
                 server_info,
                 client_info,
                 socket,

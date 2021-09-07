@@ -12,7 +12,7 @@ use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 use crate::{
     resources::{UiHandles, UiType},
     states::lobby::Lobby,
-    systems::chat::ServerInfoResource,
+    systems::message::ServerInfoResource,
 };
 use shared::{
     clientinfo::ClientInfo,
@@ -49,7 +49,7 @@ impl MainMenu {
         let mut net = world.fetch_mut::<TransportResource>();
         let msg = Message::new(client, "I want to connect to the server".to_owned());
 
-        let trans_message = TransMessage::construct(MessageLayer::ConnectRequest, msg);
+        let trans_message = TransMessage::construct(MessageLayer::Connection, msg);
 
         // FIXME: unwrap()
         net.send(

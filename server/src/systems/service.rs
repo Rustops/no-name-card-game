@@ -144,28 +144,7 @@ impl<'a> System<'a> for ServiceSystem {
                     info!("{}: {:?}", addr, payload);
                     if let Ok(resp) = serde_json::from_slice::<TransMessage>(payload) {
                         match resp {
-                            TransMessage::Default(m) => {
-                                info!("Received: [Default]");
-                                info!("Unimplemented: {:?}", m);
-                            }
-                            TransMessage::ResponseImOnline(_m) => {
-                                info!("Received: [ResponseImOnline]");
-
-                                // let trans_message = TransMessage::new(
-                                //     MessageLayer::ResponseImOnline,
-                                //     m.from,
-                                //     m.msg,
-                                // );
-
-                                // let _v: Vec<_> = self
-                                //     .connection
-                                //     .iter()
-                                //     .map(|x| {
-                                //         net.send(*x, trans_message.serialize().unwrap().as_bytes())
-                                //     })
-                                //     .collect();
-                            }
-                            TransMessage::ConnectRequest(m) => {
+                            TransMessage::Connection(m) => {
                                 info!("Received: [ConnectRequest]");
                                 self.players.insert(*addr, m.from.clone());
 
@@ -175,7 +154,7 @@ impl<'a> System<'a> for ServiceSystem {
                                     .skip_while(|(s, c)| *s == addr && **c == m.from)
                                     .for_each(|(s, c)| {
                                         let msg = TransMessage::new(
-                                            MessageLayer::PlayerEnterLobby,
+                                            MessageLayer::Connection,
                                             c.clone(),
                                             "enter lobby".to_string(),
                                         );
@@ -198,7 +177,7 @@ impl<'a> System<'a> for ServiceSystem {
                                     let mut s = *addr;
                                     s.set_port(m.from.port);
                                     let msg = TransMessage::new(
-                                        MessageLayer::PlayerEnterLobby,
+                                        MessageLayer::Connection,
                                         c.clone(),
                                         "enter lobby".to_string(),
                                     );
@@ -212,18 +191,13 @@ impl<'a> System<'a> for ServiceSystem {
                                     }
                                 });
                             }
-                            TransMessage::SendToServer(m) => {
-                                info!("Received: [SendToServer]");
-                                info!("Unimplemented: {:?}", m);
-                            }
-                            TransMessage::ChatMessage(m) => {
+                            TransMessage::System(_) => todo!(),
+                            TransMessage::Lobby(_) => todo!(),
+                            TransMessage::Chat(m) => {
                                 info!("Received: [ChatMessage]");
 
-                                let trans_message = TransMessage::new(
-                                    MessageLayer::ForwardChatMessage,
-                                    m.from,
-                                    m.msg,
-                                );
+                                let trans_message =
+                                    TransMessage::new(MessageLayer::Chat, m.from, m.msg);
 
                                 let _v: Vec<_> = self
                                     .players
@@ -248,7 +222,7 @@ impl<'a> System<'a> for ServiceSystem {
                                 info!("Sent: [ForwardChatMessage] to all clients");
                                 debug!("ForwardChatMessage is {:?}", trans_message);
                             }
-                            _ => debug!("Message is not for me"),
+                            TransMessage::Game(_) => todo!(),
                         }
                     }
                 }
@@ -267,6 +241,7 @@ impl<'a> System<'a> for ServiceSystem {
                     self.online_num = self.connection.len().try_into().unwrap();
                     self.players.remove(addr);
                     info!("Online player num: {:?}", self.online_num);
+                    
                 }
                 NetworkSimulationEvent::RecvError(e) => {
                     error!("Recv Error: {:?}", e);
