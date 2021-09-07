@@ -19,8 +19,11 @@ use amethyst::{
     ui::{UiEvent, UiEventType, UiFinder, UiText},
     Result,
 };
-use log::{debug, error, info, warn};
-use shared::msg::{MessageLayer, TransMessage};
+use log::{error, info, warn};
+use shared::{
+    clientinfo::ClientInfo,
+    msg::{MessageLayer, MessageType, TransMessage},
+};
 use std::net::{SocketAddr, TcpListener, UdpSocket};
 
 use crate::{components::Player, entities::player::load_player, resources::SoundType};
@@ -28,20 +31,19 @@ use crate::{components::Player, entities::player::load_player, resources::SoundT
 use super::play_sfx::SoundEvent;
 
 const SERVER_ADDRESS: &str = "127.0.0.1:6666";
-const CLIENT_NAME: &str = "test";
 
 #[derive(Debug, Default)]
-pub struct ChatroomBundle {
+pub struct MessageBundle {
     pub server_info: ServerInfoResource,
-    pub client_info: ClientInfoResource,
+    pub client_info: ClientInfo,
     pub socket: Option<UdpSocket>,
     pub listener: Option<TcpListener>,
 }
 
-impl ChatroomBundle {
+impl MessageBundle {
     pub fn new(
         server_info: ServerInfoResource,
-        client_info: ClientInfoResource,
+        client_info: ClientInfo,
         socket: UdpSocket,
         listener: TcpListener,
     ) -> Self {
@@ -54,7 +56,7 @@ impl ChatroomBundle {
     }
 }
 
-impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
+impl<'a, 'b> SystemBundle<'a, 'b> for MessageBundle {
     fn build(self, world: &mut World, builder: &mut DispatcherBuilder<'a, 'b>) -> Result<()> {
         builder.add(NetworkSimulationTimeSystem, "simulation_time", &[]);
 
@@ -94,19 +96,22 @@ impl<'a, 'b> SystemBundle<'a, 'b> for ChatroomBundle {
         world.insert(UdpSocketResource::new(self.socket));
 
         world.insert(ServerInfoResource::new(self.server_info.addr));
-        world.insert(ClientInfoResource::new(self.client_info.name));
-        builder.add(ChatroomSystemDesc.build(world), "chat_system", &[]);
+        world.insert(ClientInfo::new(
+            self.client_info.name,
+            self.client_info.port,
+        ));
+        builder.add(MessageSystemDesc.build(world), "message_system", &[]);
         Ok(())
     }
 }
 
 #[derive(Default, Debug)]
-pub struct ChatroomSystemDesc;
+pub struct MessageSystemDesc;
 
-impl<'a, 'b> SystemDesc<'a, 'b, ChatroomSystem> for ChatroomSystemDesc {
-    fn build(self, world: &mut World) -> ChatroomSystem {
+impl<'a, 'b> SystemDesc<'a, 'b, MessageSystem> for MessageSystemDesc {
+    fn build(self, world: &mut World) -> MessageSystem {
         // Creates the EventChannel<NetworkEvent> managed by the ECS.
-        <ChatroomSystem as System<'_>>::SystemData::setup(world);
+        <MessageSystem as System<'_>>::SystemData::setup(world);
         // Fetch the change we just created and call `register_reader` to get a
         // ReaderId<NetworkEvent>. This reader id is used to fetch new events from the network event
         // channel.
@@ -116,34 +121,34 @@ impl<'a, 'b> SystemDesc<'a, 'b, ChatroomSystem> for ChatroomSystemDesc {
 
         let ui_reader = world.fetch_mut::<EventChannel<UiEvent>>().register_reader();
 
-        let client = world.fetch::<ClientInfoResource>().name.clone();
+        let client = world.fetch_mut::<ClientInfo>().clone();
         let server = world.fetch::<ServerInfoResource>().get_addr();
-        ChatroomSystem::new(network_reader, ui_reader, client, server)
+        MessageSystem::new(network_reader, ui_reader, client, server)
     }
 }
 
 /// A simple system that receives a ton of network events.
-struct ChatroomSystem {
+struct MessageSystem {
     network_reader: ReaderId<NetworkSimulationEvent>,
     ui_reader: ReaderId<UiEvent>,
     chat_output: Option<Entity>,
-    local_name: String,
+    client_info: ClientInfo,
     server_addr: SocketAddr,
-    players: Vec<String>,
+    players: Vec<ClientInfo>,
 }
 
-impl ChatroomSystem {
+impl MessageSystem {
     pub fn new(
         network_reader: ReaderId<NetworkSimulationEvent>,
         ui_reader: ReaderId<UiEvent>,
-        local_name: String,
+        client_info: ClientInfo,
         server_addr: SocketAddr,
     ) -> Self {
         Self {
             network_reader,
             ui_reader,
             chat_output: None,
-            local_name,
+            client_info,
             server_addr,
             players: vec![],
         }
@@ -154,7 +159,7 @@ impl ChatroomSystem {
     }
 }
 
-impl<'a> System<'a> for ChatroomSystem {
+impl<'a> System<'a> for MessageSystem {
     type SystemData = (
         UiFinder<'a>,
         Read<'a, EventChannel<UiEvent>>,
@@ -190,15 +195,16 @@ impl<'a> System<'a> for ChatroomSystem {
                     sound_channel.single_write(SoundEvent::new(SoundType::Confirm));
                     // let msg = format!("{}-Chat-{}", self.local_name, input.text.clone());
                     info!(
-                        "[{}][{}] Sending message: {}",
+                        "[{}]{:?} Sending message: {}",
                         time.absolute_time_seconds(),
-                        self.local_name,
+                        &self.client_info,
                         &input.text,
                     );
 
                     let trans_message = TransMessage::new(
-                        MessageLayer::ChatMessage,
-                        self.local_name.to_string(),
+                        MessageLayer::Chat,
+                        self.client_info.clone(),
+                        shared::msg::MessageType::Chat,
                         input.text.clone(),
                     );
 
@@ -219,15 +225,35 @@ impl<'a> System<'a> for ChatroomSystem {
                         info!("msg is {:?}", resp);
                         self.find_ui_elements(&ui_finder);
                         match resp {
-                            TransMessage::Default(m) => {
-                                info!("Received: [SendToServer]");
-                                info!("Unimplemented: {:?}", m);
+                            TransMessage::Connection(m) => {
+                                if m.msg_type == MessageType::EnterLobby {
+                                    info!("Received: [PlayerEnterLobby]");
+                                    let num = self.players.len();
+                                    let client = m.from;
+                                    if self.players.contains(&client) {
+                                        continue;
+                                    }
+                                    self.players.push(client.clone());
+                                    log::info!("[Chat] Prepare loading player");
+                                    lazy.exec_mut(move |world| {
+                                        load_player(world, client.name, num);
+                                    });
+                                } else if m.msg_type == MessageType::Exit {
+                                    info!("Received: [PlayerExitGame]");
+                                    let client = m.from;
+                                    if self.players.contains(&client) {
+                                        let x = self
+                                            .players
+                                            .binary_search(&client)
+                                            .unwrap_or_else(|x| x);
+                                        self.players.remove(x);
+                                        // TODO: Remove player entity
+                                    }
+                                }
                             }
-                            TransMessage::ResponseImOnline(m) => {
-                                info!("Received: [SendToServer]");
-                                info!("Unimplemented: {:?}", m);
-                            }
-                            TransMessage::ForwardChatMessage(m) => {
+                            TransMessage::System(_) => todo!(),
+                            TransMessage::Lobby(_) => todo!(),
+                            TransMessage::Chat(m) => {
                                 info!("Received: [ForwardChatMessage]");
                                 info!("[Chat] Update chatbox output");
                                 if let Some(chat_output) = self.chat_output {
@@ -241,25 +267,7 @@ impl<'a> System<'a> for ChatroomSystem {
                                     }
                                 }
                             }
-                            TransMessage::PlayerEnterLobby(m) => {
-                                info!("Received: [PlayerEnterLobby]");
-                                // TODO: create player entity
-                                let num = self.players.len();
-                                let name = m.from;
-                                if self.players.contains(&name) {
-                                    continue;
-                                }
-                                self.players.push(name.clone());
-                                log::info!("[Chat] Prepare loading player");
-                                lazy.exec_mut(move |world| {
-                                    load_player(world, name, num);
-                                });
-                            }
-                            TransMessage::Order(m) => {
-                                info!("Received: [Order]");
-                                info!("Unimplemented: {:?}", m);
-                            }
-                            _ => debug!("Message is not for me"),
+                            TransMessage::Game(_) => todo!(),
                         }
                     } else {
                         warn!(
@@ -309,25 +317,6 @@ impl Default for ServerInfoResource {
     fn default() -> Self {
         Self {
             addr: SERVER_ADDRESS.parse().unwrap(),
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct ClientInfoResource {
-    pub name: String,
-}
-
-impl ClientInfoResource {
-    pub fn new(name: String) -> Self {
-        Self { name }
-    }
-}
-
-impl Default for ClientInfoResource {
-    fn default() -> Self {
-        Self {
-            name: CLIENT_NAME.to_string(),
         }
     }
 }
