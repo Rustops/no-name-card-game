@@ -246,7 +246,7 @@ impl<'a> System<'a> for MessageSystem {
                                             .players
                                             .binary_search(&client)
                                             .unwrap_or_else(|x| x);
-                                        self.players.remove(x);
+                                        self.players.remove(x - 1);
                                         // TODO: Remove player entity
                                     }
                                 }
