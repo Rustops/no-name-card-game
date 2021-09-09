@@ -8,6 +8,8 @@ use amethyst::{
     TransEvent,
 };
 
+use crate::events::state_event::ExtendedStateEvent;
+
 use super::menu::MainMenu;
 
 /// Adapted, originally from amethyst/evoli src/states/pause_menu.rs
@@ -30,7 +32,7 @@ const EXIT_BUTTON_ID: &str = "exit";
 // if the "resume" button is clicked, goto MainGameState
 // if the "exit_to_main_menu" button is clicked, remove the pause and main game states and go to MenuState.
 // if the "exit" button is clicked, quit the program.
-impl<'a> SimpleState for PauseMenuState {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for PauseMenuState {
     fn on_start(&mut self, data: StateData<GameData>) {
         let world = data.world;
 
@@ -48,9 +50,13 @@ impl<'a> SimpleState for PauseMenuState {
         self.exit_to_main_menu_button = None;
     }
 
-    fn handle_event(&mut self, data: StateData<GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        data: StateData<GameData<'a, 'b>>,
+        event: ExtendedStateEvent,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         match event {
-            StateEvent::Window(event) => {
+            ExtendedStateEvent::Window(event) => {
                 if is_close_requested(&event) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit
@@ -61,7 +67,7 @@ impl<'a> SimpleState for PauseMenuState {
                     Trans::None
                 }
             }
-            StateEvent::Ui(UiEvent {
+            ExtendedStateEvent::Ui(UiEvent {
                 event_type: UiEventType::Click,
                 target,
             }) => {
@@ -71,7 +77,7 @@ impl<'a> SimpleState for PauseMenuState {
                 } else if Some(target) == self.exit_to_main_menu_button {
                     let mut state_transition_event_channel = data
                         .world
-                        .write_resource::<EventChannel<TransEvent<GameData, StateEvent>>>();
+                        .write_resource::<EventChannel<TransEvent<GameData, ExtendedStateEvent>>>();
 
                     // this allows us to first 'Pop' this state, and then exchange whatever was
                     // below that with a new MainMenu state.
@@ -94,7 +100,7 @@ impl<'a> SimpleState for PauseMenuState {
         }
     }
 
-    fn update(&mut self, data: &mut StateData<GameData>) -> SimpleTrans {
+    fn update(&mut self, data: StateData<GameData>) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         // once deferred creation of the root ui entity finishes, look up buttons
         if self.resume_button.is_none()
             || self.exit_to_main_menu_button.is_none()

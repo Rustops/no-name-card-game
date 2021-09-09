@@ -26,7 +26,10 @@ use shared::{
 };
 use std::net::{SocketAddr, TcpListener, UdpSocket};
 
-use crate::{components::Player, entities::player::load_player, resources::SoundType};
+use crate::{
+    components::Player, entities::player::load_player, events::connection_event::ConnectionEvent,
+    resources::SoundType,
+};
 
 use super::play_sfx::SoundEvent;
 
@@ -169,6 +172,7 @@ impl<'a> System<'a> for MessageSystem {
         Read<'a, EventChannel<NetworkSimulationEvent>>,
         WriteStorage<'a, UiText>,
         Write<'a, EventChannel<SoundEvent>>,
+        Write<'a, EventChannel<ConnectionEvent>>,
         Read<'a, LazyUpdate>,
     );
 
@@ -183,6 +187,7 @@ impl<'a> System<'a> for MessageSystem {
             event,
             mut ui_text,
             mut sound_channel,
+            mut connection_event,
             lazy,
         ): Self::SystemData,
     ) {
@@ -234,6 +239,9 @@ impl<'a> System<'a> for MessageSystem {
                                         continue;
                                     }
                                     self.players.push(client.clone());
+
+                                    connection_event
+                                        .single_write(ConnectionEvent::EnterLobby(client.clone()));
                                     log::info!("[Chat] Prepare loading player");
                                     lazy.exec_mut(move |world| {
                                         load_player(world, client.name, num);
@@ -248,6 +256,9 @@ impl<'a> System<'a> for MessageSystem {
                                             .unwrap_or_else(|x| x);
                                         self.players.remove(x - 1);
                                         // TODO: Remove player entity
+                                        connection_event.single_write(ConnectionEvent::ExitGame(
+                                            client.clone(),
+                                        ));
                                     }
                                 }
                             }

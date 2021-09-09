@@ -8,7 +8,10 @@ use amethyst::{
     winit::VirtualKeyCode,
 };
 
-use crate::resources::{UiHandles, UiType};
+use crate::{
+    events::state_event::ExtendedStateEvent,
+    resources::{UiHandles, UiType},
+};
 
 use super::pause::PauseMenuState;
 /// Main 'Game' state. Actually, it is mostly similar to the ui/main.rs content-wise.
@@ -36,7 +39,7 @@ impl Game {
     }
 }
 
-impl SimpleState for Game {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for Game {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         self.init_ui(&mut data);
         // let StateData { mut world, .. } = data;
@@ -71,9 +74,13 @@ impl SimpleState for Game {
         self.player_display = None;
     }
 
-    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'a, 'b>>,
+        event: ExtendedStateEvent,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         match &event {
-            StateEvent::Window(event) => {
+            ExtendedStateEvent::Window(event) => {
                 if is_close_requested(event) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit
@@ -84,21 +91,25 @@ impl SimpleState for Game {
                     Trans::None
                 }
             }
-            StateEvent::Ui(_ui_event) => {
+            ExtendedStateEvent::Ui(_ui_event) => {
                 // log::info!(
                 //     "[HANDLE_EVENT] You just interacted with a ui element: {:?}",
                 //     ui_event
                 // );
                 Trans::None
             }
-            StateEvent::Input(_input) => {
+            ExtendedStateEvent::Input(_input) => {
                 // log::info!("Input Event detected: {:?}.", input);
                 Trans::None
             }
+            _ => Trans::None,
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
+    fn update(
+        &mut self,
+        state_data: StateData<'_, GameData<'a, 'b>>,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         let StateData { world, .. } = state_data;
 
         // this cannot happen in 'on_start', as the entity might not be fully

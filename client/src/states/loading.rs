@@ -1,3 +1,4 @@
+use crate::events::state_event::ExtendedStateEvent;
 use crate::resources::{load_audio_settings, Assets, AudioSettings, Music, UiHandles, UserCache};
 use crate::utilities::files::get_user_cache_file;
 use amethyst::assets::AssetStorage;
@@ -30,7 +31,7 @@ pub struct LoadingState {
     load_ui: Option<Entity>,
 }
 
-impl SimpleState for LoadingState {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for LoadingState {
     fn on_start(&mut self, data: StateData<'_, GameData<'_, '_>>) {
         load_configs(data.world);
         self.load_ui = Some(data.world.exec(|mut creator: UiCreator<'_>| {
@@ -131,7 +132,10 @@ impl SimpleState for LoadingState {
         data.world.insert(music_resource);
     }
 
-    fn update(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) -> SimpleTrans {
+    fn update(
+        &mut self,
+        data: StateData<'_, GameData<'a, 'b>>,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         match self.progress.complete() {
             Completion::Failed => {
                 error!("Failed loading assets");

@@ -11,7 +11,7 @@ use amethyst::{
 use super::pause::PauseMenuState;
 use crate::{
     common::camera::*,
-    // entities::player::load_player,
+    events::state_event::ExtendedStateEvent,
     resources::{UiHandles, UiType},
     states::select_character::SelectState,
 };
@@ -26,9 +26,6 @@ pub struct Lobby {
     paused: bool,
     // The UI root entity. Deleting this should remove the complete UI
     ui_root: Option<Entity>,
-    // THe player entity
-    // player: Option<Entity>,
-    // peers: Vec<Option<Entity>>,
     // A reference to the FPS display, which we want to interact with
     fps_display: Option<Entity>,
     // A button to start game
@@ -41,23 +38,16 @@ impl Lobby {
         // invoke a world update to finish creating our ui entities
         data.data.update(data.world);
     }
-    // fn init_avatar(&mut self, data: &mut StateData<'_, GameData<'_, '_>>) {
-    //     load_player(data.world);
-    // }
 }
 
-impl SimpleState for Lobby {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for Lobby {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         // let StateData { mut world, .. } = data;
         self.init_ui(&mut data);
-        // self.init_avatar(&mut data);
-        // load_player(data.world);
 
         initialise_camera(&mut data.world);
-        // load_player(data.world);
         // needed for registering audio output.
         // init_output(&mut world);
-        // initialize_audio(world);
     }
 
     fn on_pause(&mut self, _data: StateData<'_, GameData>) {
@@ -79,9 +69,13 @@ impl SimpleState for Lobby {
         self.fps_display = None;
     }
 
-    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        _data: StateData<'_, GameData<'a, 'b>>,
+        event: ExtendedStateEvent,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         match event {
-            StateEvent::Window(event) => {
+            ExtendedStateEvent::Window(event) => {
                 if is_close_requested(&event) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit
@@ -92,7 +86,7 @@ impl SimpleState for Lobby {
                     Trans::None
                 }
             }
-            StateEvent::Ui(UiEvent {
+            ExtendedStateEvent::Ui(UiEvent {
                 event_type: UiEventType::Click,
                 target,
             }) => {
@@ -102,7 +96,7 @@ impl SimpleState for Lobby {
                 }
                 Trans::None
             }
-            StateEvent::Input(_input) => {
+            ExtendedStateEvent::Input(_input) => {
                 // log::info!("Input Event detected: {:?}.", input);
                 Trans::None
             }
@@ -110,8 +104,11 @@ impl SimpleState for Lobby {
         }
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
-        let StateData { world, .. } = state_data;
+    fn update(
+        &mut self,
+        state_data: StateData<'_, GameData<'a, 'b>>,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
+        let world = state_data.world;
 
         // this cannot happen in 'on_start', as the entity might not be fully
         // initialized/registered/created yet.

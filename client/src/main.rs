@@ -22,6 +22,7 @@ use structopt::StructOpt;
 mod common;
 mod components;
 mod entities;
+mod events;
 mod resources;
 mod states;
 mod systems;

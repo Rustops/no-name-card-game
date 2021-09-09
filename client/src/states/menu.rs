@@ -10,6 +10,7 @@ use log::info;
 
 use super::{credits::CreditsScreen, welcome::WelcomeScreen};
 use crate::{
+    events::state_event::ExtendedStateEvent,
     resources::{UiHandles, UiType},
     states::lobby::Lobby,
     systems::message::ServerInfoResource,
@@ -96,13 +97,16 @@ impl MenuButtons {
     }
 }
 
-impl SimpleState for MainMenu {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for MainMenu {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         info!("MainMenuState on_start");
         self.init_ui(&mut data);
     }
 
-    fn update(&mut self, state_data: &mut StateData<'_, GameData>) -> SimpleTrans {
+    fn update(
+        &mut self,
+        state_data: StateData<'_, GameData<'a, 'b>>,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         // only search for buttons if they have not been found yet
         let StateData { world, .. } = state_data;
 
@@ -116,11 +120,11 @@ impl SimpleState for MainMenu {
     fn handle_event(
         &mut self,
         state_data: StateData<'_, GameData>,
-        event: StateEvent,
-    ) -> SimpleTrans {
+        event: ExtendedStateEvent,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         // let StateData { world, .. } = state_data;
         match event {
-            StateEvent::Window(event) => {
+            ExtendedStateEvent::Window(event) => {
                 if is_close_requested(&event) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit
@@ -131,7 +135,7 @@ impl SimpleState for MainMenu {
                     Trans::None
                 }
             }
-            StateEvent::Ui(UiEvent {
+            ExtendedStateEvent::Ui(UiEvent {
                 event_type: UiEventType::Click,
                 target,
             }) => {

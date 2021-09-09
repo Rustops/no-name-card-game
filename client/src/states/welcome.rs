@@ -1,4 +1,7 @@
-use crate::resources::{UiHandles, UiType};
+use crate::{
+    events::state_event::ExtendedStateEvent,
+    resources::{UiHandles, UiType},
+};
 use amethyst::{
     ecs::Entity,
     input::{is_close_requested, is_key_down, is_mouse_button_down},
@@ -19,15 +22,19 @@ impl WelcomeScreen {
     }
 }
 
-impl SimpleState for WelcomeScreen {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for WelcomeScreen {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         self.init_ui(&mut data);
         // initialize_audio(data.world);
     }
 
-    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'a, 'b>>,
+        event: ExtendedStateEvent,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         match &event {
-            StateEvent::Window(event) => {
+            ExtendedStateEvent::Window(event) => {
                 if is_close_requested(event) || is_key_down(event, VirtualKeyCode::Escape) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit

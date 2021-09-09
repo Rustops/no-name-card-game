@@ -5,7 +5,10 @@ use amethyst::{
     winit::{MouseButton, VirtualKeyCode},
 };
 
-use crate::resources::{UiHandles, UiType};
+use crate::{
+    events::state_event::ExtendedStateEvent,
+    resources::{UiHandles, UiType},
+};
 
 use super::menu::MainMenu;
 // A simple 'Screen' State, only capable of loading/showing the prefab ui and registering simple
@@ -24,14 +27,18 @@ impl CreditsScreen {
     }
 }
 
-impl SimpleState for CreditsScreen {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for CreditsScreen {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         self.init_ui(&mut data);
     }
 
-    fn handle_event(&mut self, _: StateData<'_, GameData>, event: StateEvent) -> SimpleTrans {
+    fn handle_event(
+        &mut self,
+        _: StateData<'_, GameData<'a, 'b>>,
+        event: ExtendedStateEvent,
+    ) -> Trans<GameData<'a, 'b>, ExtendedStateEvent> {
         match &event {
-            StateEvent::Window(event) => {
+            ExtendedStateEvent::Window(event) => {
                 if is_close_requested(event) {
                     log::info!("[Trans::Quit] Quitting Application!");
                     Trans::Quit

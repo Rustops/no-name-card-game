@@ -1,6 +1,9 @@
-use amethyst::{ecs::Entity, GameData, SimpleState, StateData};
+use amethyst::{ecs::Entity, GameData, State, StateData};
 
-use crate::resources::{UiHandles, UiType};
+use crate::{
+    events::state_event::ExtendedStateEvent,
+    resources::{UiHandles, UiType},
+};
 
 #[derive(Debug, Default)]
 pub struct SelectState {
@@ -15,7 +18,7 @@ impl SelectState {
     }
 }
 
-impl SimpleState for SelectState {
+impl<'a, 'b> State<GameData<'a, 'b>, ExtendedStateEvent> for SelectState {
     fn on_start(&mut self, mut data: StateData<'_, GameData<'_, '_>>) {
         self.init_ui(&mut data);
     }
