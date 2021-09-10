@@ -2,7 +2,8 @@ use amethyst::{
     assets::Handle,
     core::{bundle::SystemBundle, SystemDesc, Time},
     ecs::{
-        DispatcherBuilder, Entity, LazyUpdate, Read, System, SystemData, World, Write, WriteStorage,
+        DispatcherBuilder, Entities, Entity, LazyUpdate, Read, System, SystemData, World, Write,
+        WriteStorage,
     },
     network::simulation::{
         tcp::{
@@ -16,7 +17,7 @@ use amethyst::{
     prelude::WorldExt,
     renderer::SpriteSheet,
     shrev::{EventChannel, ReaderId},
-    ui::{UiEvent, UiEventType, UiFinder, UiText},
+    ui::{Anchor, UiEvent, UiEventType, UiFinder, UiImage, UiText, UiTransform},
     Result,
 };
 use log::{error, info, warn};
@@ -24,9 +25,15 @@ use shared::{
     clientinfo::ClientInfo,
     msg::{MessageLayer, MessageType, TransMessage},
 };
-use std::net::{SocketAddr, TcpListener, UdpSocket};
+use std::{
+    collections::HashMap,
+    net::{SocketAddr, TcpListener, UdpSocket},
+};
 
-use crate::{components::Player, entities::player::load_player, resources::SoundType};
+use crate::{
+    components::{Player, PlayerState},
+    resources::{Assets, Avatar, CharacterType, SoundType},
+};
 
 use super::play_sfx::SoundEvent;
 
@@ -135,6 +142,7 @@ struct MessageSystem {
     client_info: ClientInfo,
     server_addr: SocketAddr,
     players: Vec<ClientInfo>,
+    player_entities: HashMap<ClientInfo, Entity>,
 }
 
 impl MessageSystem {
@@ -151,6 +159,7 @@ impl MessageSystem {
             client_info,
             server_addr,
             players: vec![],
+            player_entities: HashMap::<ClientInfo, Entity>::new(),
         }
     }
 
@@ -170,6 +179,8 @@ impl<'a> System<'a> for MessageSystem {
         WriteStorage<'a, UiText>,
         Write<'a, EventChannel<SoundEvent>>,
         Read<'a, LazyUpdate>,
+        Entities<'a>,
+        Read<'a, Assets>,
     );
 
     fn run(
@@ -184,6 +195,8 @@ impl<'a> System<'a> for MessageSystem {
             mut ui_text,
             mut sound_channel,
             lazy,
+            entities,
+            avatars,
         ): Self::SystemData,
     ) {
         ui_event
@@ -235,19 +248,59 @@ impl<'a> System<'a> for MessageSystem {
                                     }
                                     self.players.push(client.clone());
                                     log::info!("[Chat] Prepare loading player");
-                                    lazy.exec_mut(move |world| {
-                                        load_player(world, client.name, num);
-                                    });
+                                    // lazy.exec_mut(move |world| {
+                                    //     load_player(world, client.name, num);
+                                    // });
+                                    let avatar = avatars.get_avatar(Avatar::Default);
+                                    let player = Player::new(
+                                        client.name.clone(),
+                                        PlayerState::Chatting,
+                                        false,
+                                        CharacterType::Alice,
+                                    );
+                                    let ui_image = UiImage::Texture(avatar);
+                                    let ui_transfrom = UiTransform::new(
+                                        format!("avater_{}", client.name),
+                                        Anchor::Middle,
+                                        Anchor::Middle,
+                                        -300. + num as f32 * 200.,
+                                        32.,
+                                        200.,
+                                        145.,
+                                        98.,
+                                    );
+
+                                    let entity = entities.create();
+
+                                    self.player_entities.insert(client, entity);
+                                    lazy.insert(entity, player);
+                                    lazy.insert(entity, ui_image);
+                                    lazy.insert(entity, ui_transfrom);
                                 } else if m.msg_type == MessageType::Exit {
                                     info!("Received: [PlayerExitGame]");
                                     let client = m.from;
                                     if self.players.contains(&client) {
+                                        // remove player entities
+                                        let entity =
+                                            self.player_entities.get(&client).unwrap().to_owned();
+                                        lazy.exec_mut(move |world| {
+                                            match world.delete_entity(entity) {
+                                                Ok(_) => {
+                                                    info!("[Lobby] Delete player entity, Success!")
+                                                }
+                                                Err(e) => info!(
+                                                    "[Lobby] Delete player entity, Failed: {}!",
+                                                    e
+                                                ),
+                                            };
+                                        });
+
+                                        self.player_entities.remove(&client);
                                         let x = self
                                             .players
                                             .binary_search(&client)
                                             .unwrap_or_else(|x| x);
                                         self.players.remove(x);
-                                        // TODO: Remove player entity
                                     }
                                 }
                             }

@@ -1,4 +1,4 @@
-use crate::{common::Pos, resources::Avatar};
+use crate::resources::Avatar;
 
 use super::{audio::SoundType, CharacterType};
 use amethyst::{assets::Handle, audio::SourceHandle, renderer::Texture};
@@ -81,18 +81,18 @@ pub enum AssetType {
     // Animated(AnimType),
 }
 
-/// Matches a still or animated asset to its dimensions in pixels. Required to calculate the
-/// correct scale factor for the entity to make it fit within its in-world bounds.
-pub fn get_asset_dimensions(asset: &AssetType) -> Pos {
-    match asset {
-        AssetType::Character(character_type, _) => match character_type {
-            CharacterType::Alice => Pos::new(50, 50),
-            CharacterType::Cirno => todo!(),
-            _ => todo!(),
-        },
-        AssetType::Avatar(avatar_type, _) => match avatar_type {
-            Avatar::Default => Pos::new(50, 50),
-            _ => Pos::new(200, 200),
-        },
-    }
-}
+// Matches a still or animated asset to its dimensions in pixels. Required to calculate the
+// correct scale factor for the entity to make it fit within its in-world bounds.
+// pub fn get_asset_dimensions(asset: &AssetType) -> Pos {
+//     match asset {
+//         AssetType::Character(character_type, _) => match character_type {
+//             CharacterType::Alice => Pos::new(50, 50),
+//             CharacterType::Cirno => todo!(),
+//             _ => todo!(),
+//         },
+//         AssetType::Avatar(avatar_type, _) => match avatar_type {
+//             Avatar::Default => Pos::new(50, 50),
+//             _ => Pos::new(200, 200),
+//         },
+//     }
+// }
