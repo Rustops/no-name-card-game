@@ -152,7 +152,7 @@ impl ServiceSystem {
                 "Tell the player:[{}] that [{}] is in the lobby.",
                 from.name, c.name
             );
-            send_message(socket, &new_addr, from, &msg);
+            send_message(socket, new_addr, from, &msg);
         });
     }
 
@@ -170,7 +170,7 @@ impl ServiceSystem {
         );
 
         info!("Load the player himself:[{}]", from.name);
-        send_message(socket, &new_addr, from, &msg);
+        send_message(socket, new_addr, from, &msg);
     }
 
     // Tell all other players that a new player has joined the game
@@ -188,7 +188,7 @@ impl ServiceSystem {
                 "Tell the player:[{}] that [{}] enter lobby.",
                 c.name, from.name
             );
-            send_message(socket, &s, c, &msg);
+            send_message(socket, s, c, &msg);
         });
     }
 }
